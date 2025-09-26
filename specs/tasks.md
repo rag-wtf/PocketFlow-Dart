@@ -1,6 +1,6 @@
 # Tasks: Port PocketFlow's Core Runtime to Dart
 
-**Input**: Design documents from `/home/limcheekin/dev/ws/rag.wtf/PocketFlow-Dart/specs/001-port-pocketflow-s/`
+**Input**: Design documents from `/home/limcheekin/dev/ws/rag.wtf/PocketFlow-Dart/specs/`
 
 ## Phase 3.1: Setup
 - [ ] T001 [P] Create the directory structure in `lib/` and `test/` as defined in the implementation plan.

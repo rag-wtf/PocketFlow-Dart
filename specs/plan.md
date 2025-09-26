@@ -1,7 +1,7 @@
 # Implementation Plan: Port PocketFlow's Core Runtime to Dart
 
-**Branch**: `001-port-pocketflow-s` | **Date**: 2025-09-26 | **Spec**: [./spec.md](./spec.md)
-**Input**: Feature specification from `/home/limcheekin/dev/ws/rag.wtf/PocketFlow-Dart/specs/001-port-pocketflow-s/spec.md`
+**Branch**: `main` | **Date**: 2025-09-26 | **Spec**: [./spec.md](./spec.md)
+**Input**: Feature specification from `/home/limcheekin/dev/ws/rag.wtf/PocketFlow-Dart/specs/spec.md`
 
 ## Execution Flow (/plan command scope)
 ```
@@ -48,7 +48,7 @@ This plan outlines the porting of the PocketFlow core runtime from Python to a D
 
 ### Documentation (this feature)
 ```
-specs/001-port-pocketflow-s/
+specs/
 ├── plan.md              # This file (/plan command output)
 ├── research.md          # Phase 0 output (/plan command)
 ├── data-model.md        # Phase 1 output (/plan command)

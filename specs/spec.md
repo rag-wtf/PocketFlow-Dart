@@ -1,6 +1,6 @@
 # Feature Specification: Port PocketFlow's Core Runtime to Dart
 
-**Feature Branch**: `001-port-pocketflow-s`  
+**Feature Branch**: `main`  
 **Created**: 2025-09-26  
 **Status**: Draft  
 **Input**: User description: "Port PocketFlow's core runtime (Graph/Node/Flow) from Python (code located in `third_party/PocketFlow-Python/pocketflow` directory) into a Dart package `pocketflow` that:
