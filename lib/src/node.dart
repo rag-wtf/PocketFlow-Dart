@@ -36,6 +36,12 @@ class Node extends BaseNode {
   }
 
   @override
+  /// Executes the node's lifecycle (`prep` -> `exec` -> `post`) with retry
+  /// logic.
+  ///
+  /// If the `exec` method fails, it will be retried up to `maxRetries` times.
+  /// A `wait` duration can be specified to delay between retries. If all
+  /// retries fail, the `execFallback` method is called.
   Future<dynamic> run(Map<String, dynamic> shared) async {
     final prepResult = await prep(shared);
     dynamic execResult;

@@ -23,6 +23,21 @@ class Flow extends BaseNode {
   }
 
   @override
+  /// Executes the flow, starting from the `start` node.
+  ///
+  /// It traverses the graph of nodes until it reaches a node with no further
+  /// connections. The next node is determined by the return value of the
+  /// current node's `run` method.
+  ///
+  /// - If the return value is a [String] that matches a key in the current
+  ///   node's `successors` map, the corresponding successor node is executed
+  ///   next.
+  /// - Otherwise, if a 'default' successor exists, it is executed.
+  /// - If neither of the above conditions is met, the flow terminates.
+  ///
+  /// Throws a [StateError] if the start node has not been set.
+  ///
+  /// Returns the result of the last executed node in the flow.
   Future<dynamic> run(Map<String, dynamic> shared) async {
     if (_start == null) {
       throw StateError('The start node has not been set.');
