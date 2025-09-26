@@ -1,4 +1,3 @@
-/// The public API for the PocketFlow library.
-library;
-
 export 'src/base_node.dart';
+export 'src/flow.dart';
+export 'src/node.dart';
