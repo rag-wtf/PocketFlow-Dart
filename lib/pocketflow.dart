@@ -1,4 +1,7 @@
+/// {@template pocketflow}
 /// A minimalist LLM framework, ported from Python to Dart.
-library;
-
-export 'src/pocketflow.dart';
+/// {@endtemplate}
+class Pocketflow {
+  /// {@macro pocketflow}
+  const Pocketflow();
+}
