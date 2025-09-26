@@ -72,8 +72,9 @@ void main() {
 
     test('start().run() should execute a single node', () async {
       final pipeline = Flow();
-      pipeline.start(NumberNode(5));
-      final lastAction = await pipeline.run(sharedStorage);
+      final lastAction = await (pipeline..start(NumberNode(5))).run(
+        sharedStorage,
+      );
 
       expect(sharedStorage['current'], 5);
       expect(lastAction, isNull);
@@ -108,8 +109,7 @@ void main() {
       final addIfPositive = AddNode(10);
       final addIfNegative = AddNode(-20);
 
-      pipeline.start(startNode).next(checkNode);
-      checkNode
+      pipeline.start(startNode).next(checkNode)
         ..next(addIfPositive, action: 'positive')
         ..next(addIfNegative, action: 'negative');
 
@@ -126,8 +126,7 @@ void main() {
       final addIfPositive = AddNode(10);
       final addIfNegative = AddNode(-20);
 
-      pipeline.start(startNode).next(checkNode);
-      checkNode
+      pipeline.start(startNode).next(checkNode)
         ..next(addIfPositive, action: 'positive')
         ..next(addIfNegative, action: 'negative');
 
@@ -144,8 +143,7 @@ void main() {
       final subtract3 = AddNode(-3);
       final endNode = EndSignalNode('cycle_done');
 
-      pipeline.start(n1).next(check);
-      check
+      pipeline.start(n1).next(check)
         ..next(subtract3, action: 'positive')
         ..next(endNode, action: 'negative');
       subtract3.next(check);

@@ -8,11 +8,6 @@ abstract class BaseNode {
   /// The successor nodes.
   final Map<String, BaseNode> successors = {};
 
-  /// Sets the parameters for the node.
-  void setParams(Map<String, dynamic> params) {
-    this.params = params;
-  }
-
   /// Defines the next node in the sequence.
   BaseNode next(BaseNode node, {String action = 'default'}) {
     successors[action] = node;
