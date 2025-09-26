@@ -41,15 +41,21 @@ void main() {
 
     test('call should pass prep result to post', () {
       node(sharedStorage);
-      expect(node.receivedPrepResult, equals(node.prepResult),
-          reason: 'post should receive the result from prep');
+      expect(
+        node.receivedPrepResult,
+        equals(node.prepResult),
+        reason: 'post should receive the result from prep',
+      );
     });
 
     test('call should return the result of the post method', () {
       node.postResult = 'test_result';
       final result = node(sharedStorage);
-      expect(result, equals('test_result'),
-          reason: 'call should return the result from post');
+      expect(
+        result,
+        equals('test_result'),
+        reason: 'call should return the result from post',
+      );
     });
   });
 }
