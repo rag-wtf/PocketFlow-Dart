@@ -19,8 +19,9 @@ class MockNode extends BaseNode {
   }
 
   @override
-  Future<dynamic> exec(Map<String, dynamic> shared) async {
+  Future<dynamic> exec(dynamic prepResult) async {
     execCalled = true;
+    receivedPrepResult = prepResult; // To test the new data flow
     return execResult;
   }
 

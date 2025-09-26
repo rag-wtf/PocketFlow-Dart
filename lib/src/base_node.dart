@@ -25,7 +25,7 @@ abstract class BaseNode {
   }
 
   /// The main execution logic for the node.
-  Future<dynamic> exec(Map<String, dynamic> shared) async {
+  Future<dynamic> exec(dynamic prepResult) async {
     // Default implementation does nothing.
   }
 
@@ -41,7 +41,7 @@ abstract class BaseNode {
   /// Executes the node's lifecycle (`prep` -> `exec` -> `post`).
   Future<dynamic> run(Map<String, dynamic> shared) async {
     final prepResult = await prep(shared);
-    final execResult = await exec(shared);
+    final execResult = await exec(prepResult);
     return post(shared, prepResult, execResult);
   }
 }

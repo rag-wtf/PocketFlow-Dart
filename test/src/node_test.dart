@@ -8,7 +8,7 @@ class NumberNode extends Node {
   final int number;
 
   @override
-  void prep(Map<String, dynamic> sharedStorage) {
+  Future<void> prep(Map<String, dynamic> sharedStorage) async {
     sharedStorage['current'] = number;
   }
 }
@@ -18,7 +18,7 @@ class AddNode extends Node {
   final int number;
 
   @override
-  void prep(Map<String, dynamic> sharedStorage) {
+  Future<void> prep(Map<String, dynamic> sharedStorage) async {
     sharedStorage['current'] = (sharedStorage['current'] as int? ?? 0) + number;
   }
 }
@@ -28,7 +28,7 @@ class MultiplyNode extends Node {
   final int number;
 
   @override
-  void prep(Map<String, dynamic> sharedStorage) {
+  Future<void> prep(Map<String, dynamic> sharedStorage) async {
     sharedStorage['current'] = (sharedStorage['current'] as int? ?? 0) * number;
   }
 }
@@ -75,24 +75,24 @@ class MultiplyNode extends Node {
 
 void main() {
   group('Node', () {
-    test('NumberNode sets the initial value correctly', () {
+    test('NumberNode sets the initial value correctly', () async {
       final node = NumberNode(42);
       final storage = <String, dynamic>{};
-      node.call(storage);
+      await node.run(storage);
       expect(storage['current'], 42);
     });
 
-    test('AddNode adds to the value correctly', () {
+    test('AddNode adds to the value correctly', () async {
       final node = AddNode(10);
       final storage = <String, dynamic>{'current': 5};
-      node.call(storage);
+      await node.run(storage);
       expect(storage['current'], 15);
     });
 
-    test('MultiplyNode multiplies the value correctly', () {
+    test('MultiplyNode multiplies the value correctly', () async {
       final node = MultiplyNode(3);
       final storage = <String, dynamic>{'current': 5};
-      node.call(storage);
+      await node.run(storage);
       expect(storage['current'], 15);
     });
   });
