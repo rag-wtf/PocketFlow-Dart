@@ -60,7 +60,7 @@ Follow the tasks outlined in `specs/issues` in the specified order.
 
 - **DO** follow the TDD process strictly.
 - **DO** write clear and descriptive commit messages.
-- **DO** ensure `dart analyze` and `dart test` pass before submitting changes.
+- **DO** execute `dart format --line-length 80 lib test` to format code, also ensure `dart analyze` and `dart test` pass before submitting changes.
 - **DON'T** add any third-party dependencies to `pubspec.yaml`.
 - **DON'T** implement functionality that is not specified in a task.
 - **DON'T** modify files outside the scope of your assigned task unless approved by the user.
