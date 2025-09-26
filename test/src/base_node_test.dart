@@ -38,6 +38,9 @@ class MockNode extends BaseNode {
   }
 }
 
+// A node that uses the default prep, exec, and post implementations.
+class DefaultNode extends BaseNode {}
+
 void main() {
   group('BaseNode', () {
     late MockNode node;
@@ -46,6 +49,18 @@ void main() {
     setUp(() {
       node = MockNode();
       sharedStorage = {};
+    });
+
+    test('next() should set a successor', () {
+      final nextNode = MockNode();
+      node.next(nextNode);
+      expect(node.successors['default'], same(nextNode));
+    });
+
+    test('next() should set a successor with a custom action', () {
+      final nextNode = MockNode();
+      node.next(nextNode, action: 'custom');
+      expect(node.successors['custom'], same(nextNode));
     });
 
     test('run should execute prep, exec, and post methods in order', () async {
@@ -77,6 +92,37 @@ void main() {
         equals('test_result'),
         reason: 'run should return the result from post',
       );
+    });
+  });
+
+  group('BaseNode default implementations', () {
+    late DefaultNode node;
+    late Map<String, dynamic> sharedStorage;
+
+    setUp(() {
+      node = DefaultNode();
+      sharedStorage = {};
+    });
+
+    test('default prep should do nothing and return null', () async {
+      final result = await node.prep(sharedStorage);
+      expect(result, isNull);
+    });
+
+    test('default exec should do nothing and return null', () async {
+      final result = await node.exec(null);
+      expect(result, isNull);
+    });
+
+    test('default post should do nothing and return null', () async {
+      final result = await node.post(sharedStorage, null, null);
+      expect(result, isNull);
+    });
+
+    test('run with default implementations should complete and return null',
+        () async {
+      final result = await node.run(sharedStorage);
+      expect(result, isNull);
     });
   });
 }

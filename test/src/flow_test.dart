@@ -70,6 +70,14 @@ void main() {
       sharedStorage = {};
     });
 
+    test('run() without a start node should throw a StateError', () {
+      final pipeline = Flow();
+      expect(
+        () => pipeline.run(sharedStorage),
+        throwsA(isA<StateError>()),
+      );
+    });
+
     test('start().run() should execute a single node', () async {
       final pipeline = Flow();
       final lastAction = await (pipeline..start(NumberNode(5))).run(

@@ -33,45 +33,55 @@ class MultiplyNode extends Node {
   }
 }
 
-// --- AsyncNode Definitions from test_async_flow.py ---
+// A test node that can be configured to fail.
+class FallibleNode extends Node {
+  int attempts = 0;
+  final int failCount;
+  final dynamic successValue;
+  final dynamic fallbackValue;
+  final bool useCustomFallback;
+  final bool rethrowNonException;
 
-// class AsyncNumberNode extends AsyncNode {
-//   final int number;
-//   AsyncNumberNode(this.number);
-//
-//   @override
-//   Future<dynamic> prepAsync(Map<String, dynamic> sharedStorage) async {
-//     sharedStorage['current'] = number;
-//     return 'set_number';
-//   }
-//
-//   @override
-//   Future<dynamic> postAsync(
-//     Map<String, dynamic> sharedStorage,
-//     dynamic prepResult,
-//   ) async {
-//     // In Python, this was asyncio.sleep(0.01)
-//     await Future.delayed(const Duration(milliseconds: 10));
-//     return 'number_set';
-//   }
-// }
-//
-// class AsyncIncrementNode extends AsyncNode {
-//   @override
-//   Future<dynamic> prepAsync(Map<String, dynamic> sharedStorage) async {
-//     sharedStorage['current'] = (sharedStorage['current'] ?? 0) + 1;
-//     return 'incremented';
-//   }
-//
-//   @override
-//   Future<dynamic> postAsync(
-//     Map<String, dynamic> sharedStorage,
-//     dynamic prepResult,
-//   ) async {
-//     await Future.delayed(const Duration(milliseconds: 10));
-//     return 'done';
-//   }
-// }
+  FallibleNode({
+    this.failCount = 0,
+    this.successValue = 'success',
+    this.fallbackValue = 'fallback',
+    this.useCustomFallback = false,
+    this.rethrowNonException = false,
+    int maxRetries = 1,
+    Duration wait = Duration.zero,
+  }) : super(maxRetries: maxRetries, wait: wait);
+
+  @override
+  Future<dynamic> exec(dynamic prepResult) async {
+    attempts++;
+    if (attempts <= failCount) {
+      if (rethrowNonException) {
+        throw 'a non-exception error';
+      }
+      throw Exception('Failed on attempt $attempts');
+    }
+    return successValue;
+  }
+
+  @override
+  Future<dynamic> execFallback(dynamic prepResult, Exception error) async {
+    if (useCustomFallback) {
+      return fallbackValue;
+    }
+    return super.execFallback(prepResult, error);
+  }
+
+  @override
+  Future<dynamic> post(
+    Map<String, dynamic> shared,
+    dynamic prepResult,
+    dynamic execResult,
+  ) async {
+    // Return the execResult so it can be asserted in tests.
+    return execResult;
+  }
+}
 
 void main() {
   group('Node', () {
@@ -97,21 +107,72 @@ void main() {
     });
   });
 
-  // group('AsyncNode', () {
-  //   test('AsyncNumberNode works when called directly', () async {
-  //     final node = AsyncNumberNode(42);
-  //     final storage = <String, dynamic>{};
-  //     final condition = await node.runAsync(storage);
-  //     expect(storage['current'], 42);
-  //     expect(condition, 'number_set');
-  //   });
-  //
-  //   test('AsyncIncrementNode works when called directly', () async {
-  //     final node = AsyncIncrementNode();
-  //     final storage = <String, dynamic>{'current': 10};
-  //     final condition = await node.runAsync(storage);
-  //     expect(storage['current'], 11);
-  //     expect(condition, 'done');
-  //   });
-  // });
+  group('Node retry and fallback', () {
+    late Map<String, dynamic> sharedStorage;
+
+    setUp(() {
+      sharedStorage = {};
+    });
+
+    test('should succeed on the first attempt if failCount is 0', () async {
+      final node = FallibleNode(failCount: 0, maxRetries: 3);
+      final result = await node.run(sharedStorage);
+      expect(result, 'success');
+      expect(node.attempts, 1);
+    });
+
+    test('should succeed on retry if failCount is within maxRetries', () async {
+      final node = FallibleNode(failCount: 2, maxRetries: 3);
+      final result = await node.run(sharedStorage);
+      expect(result, 'success');
+      expect(node.attempts, 3);
+    });
+
+    test(
+        'should rethrow the exception if retries are exhausted with default fallback',
+        () async {
+      final node = FallibleNode(failCount: 3, maxRetries: 2);
+      await expectLater(
+        () => node.run(sharedStorage),
+        throwsA(isA<Exception>()),
+      );
+    });
+
+    test('should call custom fallback when retries are exhausted', () async {
+      final node = FallibleNode(
+        failCount: 3,
+        maxRetries: 2,
+        useCustomFallback: true,
+      );
+      final result = await node.run(sharedStorage);
+      expect(result, 'fallback');
+    });
+
+    test('should wait between retries', () async {
+      final waitDuration = const Duration(milliseconds: 50);
+      final node = FallibleNode(
+        failCount: 1,
+        maxRetries: 2,
+        wait: waitDuration,
+      );
+      final stopwatch = Stopwatch()..start();
+      await node.run(sharedStorage);
+      stopwatch.stop();
+      expect(stopwatch.elapsed, greaterThanOrEqualTo(waitDuration));
+    });
+
+    test('should rethrow non-Exception errors immediately', () async {
+      final node = FallibleNode(
+        failCount: 1,
+        maxRetries: 3,
+        rethrowNonException: true,
+      );
+      await expectLater(
+        () => node.run(sharedStorage),
+        throwsA(isA<String>()),
+      );
+      // Fallback should not be reached, so attempts should be 1
+      expect(node.attempts, 1);
+    });
+  });
 }

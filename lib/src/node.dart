@@ -51,13 +51,16 @@ class Node extends BaseNode {
         execResult = await exec(prepResult);
         break; // Success, exit loop
       } catch (e) {
+        // If it's not an Exception, rethrow immediately. The retry logic is
+        // only for recoverable Exceptions.
+        if (e is! Exception) {
+          rethrow;
+        }
+
+        // If it's the last attempt for a recoverable Exception, use fallback.
         if (attempt == maxRetries - 1) {
-          if (e is Exception) {
-            execResult = await execFallback(prepResult, e);
-            break; // Exit loop after fallback
-          } else {
-            rethrow; // Can't handle non-Exception errors with fallback
-          }
+          execResult = await execFallback(prepResult, e as Exception);
+          break; // Exit loop after fallback
         }
 
         if (wait > Duration.zero) {
