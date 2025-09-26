@@ -40,7 +40,7 @@ class Node extends BaseNode {
     final prepResult = await prep(shared);
     dynamic execResult;
 
-    for (int attempt = 0; attempt < maxRetries; attempt++) {
+    for (var attempt = 0; attempt < maxRetries; attempt++) {
       try {
         execResult = await exec(prepResult);
         break; // Success, exit loop

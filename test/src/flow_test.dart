@@ -8,7 +8,7 @@ class NumberNode extends Node {
   final int number;
 
   @override
-  void prep(Map<String, dynamic> sharedStorage) {
+  Future<void> prep(Map<String, dynamic> sharedStorage) async {
     sharedStorage['current'] = number;
   }
 }
@@ -18,7 +18,7 @@ class AddNode extends Node {
   final int number;
 
   @override
-  void prep(Map<String, dynamic> sharedStorage) {
+  Future<void> prep(Map<String, dynamic> sharedStorage) async {
     sharedStorage['current'] = (sharedStorage['current'] as int? ?? 0) + number;
   }
 }
@@ -28,14 +28,18 @@ class MultiplyNode extends Node {
   final int number;
 
   @override
-  void prep(Map<String, dynamic> sharedStorage) {
+  Future<void> prep(Map<String, dynamic> sharedStorage) async {
     sharedStorage['current'] = (sharedStorage['current'] as int? ?? 0) * number;
   }
 }
 
 class CheckPositiveNode extends Node {
   @override
-  String? post(Map<String, dynamic> sharedStorage, dynamic prepResult) {
+  Future<String?> post(
+    Map<String, dynamic> sharedStorage,
+    dynamic prepResult,
+    dynamic execResult,
+  ) async {
     if ((sharedStorage['current'] as int? ?? 0) >= 0) {
       return 'positive';
     } else {
@@ -49,7 +53,11 @@ class EndSignalNode extends Node {
   final String signal;
 
   @override
-  String? post(Map<String, dynamic> sharedStorage, dynamic prepResult) {
+  Future<String?> post(
+    Map<String, dynamic> sharedStorage,
+    dynamic prepResult,
+    dynamic execResult,
+  ) async {
     return signal;
   }
 }
@@ -62,42 +70,38 @@ void main() {
       sharedStorage = {};
     });
 
-    test('start().run() should execute a single node', () {
+    test('start().run() should execute a single node', () async {
       final pipeline = Flow();
       pipeline.start(NumberNode(5));
-      final lastAction = pipeline.run(sharedStorage);
+      final lastAction = await pipeline.run(sharedStorage);
 
       expect(sharedStorage['current'], 5);
       expect(lastAction, isNull);
     });
 
-    test('start().next().next() should execute a chain of nodes', () {
+    test('start().next().next() should execute a chain of nodes', () async {
       final pipeline = Flow();
       pipeline.start(NumberNode(5)).next(AddNode(3)).next(MultiplyNode(2));
-      final lastAction = pipeline.run(sharedStorage);
+      final lastAction = await pipeline.run(sharedStorage);
 
       expect(sharedStorage['current'], 16);
       expect(lastAction, isNull);
     });
 
-    test('>> operator should execute a sequence of nodes', () {
+    test('next() should execute a sequence of nodes', () async {
       final pipeline = Flow();
       final n1 = NumberNode(5);
       final n2 = AddNode(3);
       final n3 = MultiplyNode(2);
 
-      // The `>>` operator is used for chaining, which is a key feature being
-      // tested. This line is essential for verifying the operator's
-      // functionality, so the `unnecessary_statements` warning is ignored.
-      // ignore: unnecessary_statements
-      pipeline.start(n1) >> n2 >> n3;
-      final lastAction = pipeline.run(sharedStorage);
+      pipeline.start(n1).next(n2).next(n3);
+      final lastAction = await pipeline.run(sharedStorage);
 
       expect(sharedStorage['current'], 16);
       expect(lastAction, isNull);
     });
 
-    test('should follow the "positive" branch', () {
+    test('should follow the "positive" branch', () async {
       final pipeline = Flow();
       final startNode = NumberNode(5);
       final checkNode = CheckPositiveNode();
@@ -105,16 +109,17 @@ void main() {
       final addIfNegative = AddNode(-20);
 
       pipeline.start(startNode).next(checkNode);
-      checkNode.on('positive').next(addIfPositive);
-      checkNode.on('negative').next(addIfNegative);
+      checkNode
+        ..next(addIfPositive, action: 'positive')
+        ..next(addIfNegative, action: 'negative');
 
-      final lastAction = pipeline.run(sharedStorage);
+      final lastAction = await pipeline.run(sharedStorage);
 
       expect(sharedStorage['current'], 15);
       expect(lastAction, isNull);
     });
 
-    test('should follow the "negative" branch', () {
+    test('should follow the "negative" branch', () async {
       final pipeline = Flow();
       final startNode = NumberNode(-5);
       final checkNode = CheckPositiveNode();
@@ -122,16 +127,17 @@ void main() {
       final addIfNegative = AddNode(-20);
 
       pipeline.start(startNode).next(checkNode);
-      checkNode.on('positive').next(addIfPositive);
-      checkNode.on('negative').next(addIfNegative);
+      checkNode
+        ..next(addIfPositive, action: 'positive')
+        ..next(addIfNegative, action: 'negative');
 
-      final lastAction = pipeline.run(sharedStorage);
+      final lastAction = await pipeline.run(sharedStorage);
 
       expect(sharedStorage['current'], -25);
       expect(lastAction, isNull);
     });
 
-    test('should cycle until a condition is met and return a signal', () {
+    test('should cycle until a condition is met and return a signal', () async {
       final pipeline = Flow();
       final n1 = NumberNode(10);
       final check = CheckPositiveNode();
@@ -139,11 +145,12 @@ void main() {
       final endNode = EndSignalNode('cycle_done');
 
       pipeline.start(n1).next(check);
-      check.on('positive').next(subtract3);
-      check.on('negative').next(endNode);
+      check
+        ..next(subtract3, action: 'positive')
+        ..next(endNode, action: 'negative');
       subtract3.next(check);
 
-      final lastAction = pipeline.run(sharedStorage);
+      final lastAction = await pipeline.run(sharedStorage);
 
       expect(sharedStorage['current'], -2);
       expect(lastAction, 'cycle_done');
