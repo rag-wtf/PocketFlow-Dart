@@ -19,8 +19,7 @@ class AddNode extends Node {
 
   @override
   void prep(Map<String, dynamic> sharedStorage) {
-    sharedStorage['current'] =
-        (sharedStorage['current'] as int? ?? 0) + number;
+    sharedStorage['current'] = (sharedStorage['current'] as int? ?? 0) + number;
   }
 }
 
@@ -30,8 +29,7 @@ class MultiplyNode extends Node {
 
   @override
   void prep(Map<String, dynamic> sharedStorage) {
-    sharedStorage['current'] =
-        (sharedStorage['current'] as int? ?? 0) * number;
+    sharedStorage['current'] = (sharedStorage['current'] as int? ?? 0) * number;
   }
 }
 
