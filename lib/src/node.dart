@@ -59,7 +59,7 @@ class Node extends BaseNode {
 
         // If it's the last attempt for a recoverable Exception, use fallback.
         if (attempt == maxRetries - 1) {
-          execResult = await execFallback(prepResult, e as Exception);
+          execResult = await execFallback(prepResult, e);
           break; // Exit loop after fallback
         }
 

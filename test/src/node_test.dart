@@ -35,12 +35,6 @@ class MultiplyNode extends Node {
 
 // A test node that can be configured to fail.
 class FallibleNode extends Node {
-  int attempts = 0;
-  final int failCount;
-  final dynamic successValue;
-  final dynamic fallbackValue;
-  final bool useCustomFallback;
-  final bool rethrowNonException;
 
   FallibleNode({
     this.failCount = 0,
@@ -48,9 +42,15 @@ class FallibleNode extends Node {
     this.fallbackValue = 'fallback',
     this.useCustomFallback = false,
     this.rethrowNonException = false,
-    int maxRetries = 1,
-    Duration wait = Duration.zero,
-  }) : super(maxRetries: maxRetries, wait: wait);
+    super.maxRetries,
+    super.wait,
+  });
+  int attempts = 0;
+  final int failCount;
+  final dynamic successValue;
+  final dynamic fallbackValue;
+  final bool useCustomFallback;
+  final bool rethrowNonException;
 
   @override
   Future<dynamic> exec(dynamic prepResult) async {
@@ -115,7 +115,7 @@ void main() {
     });
 
     test('should succeed on the first attempt if failCount is 0', () async {
-      final node = FallibleNode(failCount: 0, maxRetries: 3);
+      final node = FallibleNode(maxRetries: 3);
       final result = await node.run(sharedStorage);
       expect(result, 'success');
       expect(node.attempts, 1);
@@ -150,7 +150,7 @@ void main() {
     });
 
     test('should wait between retries', () async {
-      final waitDuration = const Duration(milliseconds: 50);
+      const waitDuration = Duration(milliseconds: 50);
       final node = FallibleNode(
         failCount: 1,
         maxRetries: 2,
