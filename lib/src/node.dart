@@ -78,6 +78,7 @@ class Node extends BaseNode {
       maxRetries: maxRetries,
       wait: wait,
     );
+    cloned.name = name;
     cloned.params = Map.from(params);
     return cloned;
   }

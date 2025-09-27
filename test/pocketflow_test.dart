@@ -13,6 +13,7 @@ class _TestNode extends BaseNode {
   @override
   BaseNode clone() {
     final cloned = _TestNode();
+    cloned.name = name;
     cloned.params = Map.from(params);
     return cloned;
   }
@@ -28,6 +29,7 @@ class _AddValueNode1 extends Node {
   @override
   Node clone() {
     final cloned = _AddValueNode1();
+    cloned.name = name;
     cloned.params = Map.from(params);
     return cloned;
   }
@@ -43,6 +45,7 @@ class _AddValueNode2 extends Node {
   @override
   Node clone() {
     final cloned = _AddValueNode2();
+    cloned.name = name;
     cloned.params = Map.from(params);
     return cloned;
   }
@@ -58,6 +61,7 @@ class _AddValueNode3 extends Node {
   @override
   Node clone() {
     final cloned = _AddValueNode3();
+    cloned.name = name;
     cloned.params = Map.from(params);
     return cloned;
   }

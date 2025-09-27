@@ -24,8 +24,9 @@ class Flow extends BaseNode {
 
   BaseNode? _cloneNode(
     BaseNode? originalNode,
-    Map<BaseNode, BaseNode> clonedNodes,
-  ) {
+    Map<BaseNode, BaseNode> clonedNodes, [
+    Map<String, BaseNode>? namedNodes,
+  ]) {
     if (originalNode == null) {
       return null;
     }
@@ -36,9 +37,13 @@ class Flow extends BaseNode {
     final clonedNode = originalNode.clone();
     clonedNodes[originalNode] = clonedNode;
 
+    if (namedNodes != null && originalNode.name != null) {
+      namedNodes[originalNode.name!] = clonedNode;
+    }
+
     for (var entry in originalNode.successors.entries) {
       clonedNode.successors[entry.key] =
-          _cloneNode(entry.value, clonedNodes)!;
+          _cloneNode(entry.value, clonedNodes, namedNodes)!;
     }
 
     return clonedNode;
@@ -51,16 +56,17 @@ class Flow extends BaseNode {
     }
 
     final clonedNodes = <BaseNode, BaseNode>{};
-    final clonedStart = _cloneNode(_start, clonedNodes);
+    final namedNodes = <String, BaseNode>{};
+    final clonedStart = _cloneNode(_start, clonedNodes, namedNodes);
 
     final nodeParams =
-        shared['__node_params__'] as Map<BaseNode, Map<String, dynamic>>?;
+        shared['__node_params__'] as Map<String, Map<String, dynamic>>?;
     if (nodeParams != null) {
       for (var entry in nodeParams.entries) {
-        final originalNode = entry.key;
+        final nodeName = entry.key;
         final params = entry.value;
-        if (clonedNodes.containsKey(originalNode)) {
-          clonedNodes[originalNode]!.params.addAll(params);
+        if (namedNodes.containsKey(nodeName)) {
+          namedNodes[nodeName]!.params.addAll(params);
         }
       }
     }
@@ -87,6 +93,7 @@ class Flow extends BaseNode {
   @override
   Flow clone() {
     final clonedFlow = Flow();
+    clonedFlow.name = name;
     clonedFlow.params = Map.from(params);
 
     if (_start == null) {

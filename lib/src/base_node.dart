@@ -2,6 +2,9 @@ import 'dart:async';
 
 /// An abstract class representing a node in a workflow.
 abstract class BaseNode {
+  /// The unique name of the node.
+  String? name;
+
   /// The parameters for the node.
   Map<String, dynamic> params = {};
 

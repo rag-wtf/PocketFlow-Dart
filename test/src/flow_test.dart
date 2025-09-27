@@ -15,6 +15,7 @@ class NumberNode extends Node {
   @override
   Node clone() {
     final cloned = NumberNode(number);
+    cloned.name = name;
     cloned.params = Map.from(params);
     return cloned;
   }
@@ -31,6 +32,7 @@ class ParameterNode extends Node {
   @override
   Node clone() {
     final cloned = ParameterNode();
+    cloned.name = name;
     cloned.params = Map.from(params);
     return cloned;
   }
@@ -48,6 +50,7 @@ class StatefulNode extends Node {
   @override
   Node clone() {
     final cloned = StatefulNode();
+    cloned.name = name;
     cloned.params = Map.from(params);
     return cloned;
   }
@@ -65,6 +68,7 @@ class AddNode extends Node {
   @override
   Node clone() {
     final cloned = AddNode(number);
+    cloned.name = name;
     cloned.params = Map.from(params);
     return cloned;
   }
@@ -82,6 +86,7 @@ class MultiplyNode extends Node {
   @override
   Node clone() {
     final cloned = MultiplyNode(number);
+    cloned.name = name;
     cloned.params = Map.from(params);
     return cloned;
   }
@@ -104,6 +109,7 @@ class CheckPositiveNode extends Node {
   @override
   Node clone() {
     final cloned = CheckPositiveNode();
+    cloned.name = name;
     cloned.params = Map.from(params);
     return cloned;
   }
@@ -125,6 +131,7 @@ class EndSignalNode extends Node {
   @override
   Node clone() {
     final cloned = EndSignalNode(signal);
+    cloned.name = name;
     cloned.params = Map.from(params);
     return cloned;
   }
@@ -151,6 +158,7 @@ class _TestCloneNode extends Node {
   @override
   Node clone() {
     final cloned = _TestCloneNode();
+    cloned.name = name;
     cloned.params = Map.from(params);
     return cloned;
   }
@@ -269,13 +277,13 @@ void main() {
       expect(sharedStorage['counter'], 1);
     });
 
-    test('should pass parameters to nodes', () async {
+    test('should pass parameters to nodes by name', () async {
       final pipeline = Flow();
-      final paramNode = ParameterNode();
+      final paramNode = ParameterNode()..name = 'param_node';
       pipeline.start(paramNode);
 
       sharedStorage['__node_params__'] = {
-        paramNode: {'value': 123},
+        'param_node': {'value': 123},
       };
 
       await pipeline.run(sharedStorage);
