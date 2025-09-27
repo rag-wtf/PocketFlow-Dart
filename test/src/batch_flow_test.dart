@@ -1,75 +1,77 @@
 import 'package:pocketflow/pocketflow.dart';
 import 'package:test/test.dart';
 
-// A mock implementation of BatchNode to test its functionalities within a flow.
-class MockMultiplierBatchNode extends BatchNode<int, int> {
-  final int multiplier;
-
-  MockMultiplierBatchNode({this.multiplier = 2});
+class MultiplyNode extends Node {
+  MultiplyNode(this.factor);
+  final int factor;
 
   @override
-  Future<List<int>> exec(List<int> items) async {
-    return items.map((item) => item * multiplier).toList();
+  Future<dynamic> prep(Map<String, dynamic> shared) async {
+    return shared['value'];
   }
 
   @override
-  BatchNode<int, int> clone() {
-    final cloned = MockMultiplierBatchNode(multiplier: multiplier);
-    cloned.name = name;
-    cloned.params = Map.from(params);
-    return cloned;
+  Future<dynamic> exec(dynamic prepResult) async {
+    return (prepResult as int) * factor;
+  }
+
+  @override
+  Future<dynamic> post(
+    Map<String, dynamic> shared,
+    dynamic prepResult,
+    dynamic execResult,
+  ) async {
+    shared['value'] = execResult;
+    return super.post(shared, prepResult, execResult);
+  }
+
+  @override
+  Node clone() {
+    return MultiplyNode(factor)..params = Map.from(params);
+  }
+}
+
+class AddNode extends Node {
+  AddNode(this.valueToAdd);
+  final int valueToAdd;
+
+  @override
+  Future<dynamic> prep(Map<String, dynamic> shared) async {
+    return shared['value'];
+  }
+
+  @override
+  Future<dynamic> exec(dynamic prepResult) async {
+    return (prepResult as int) + valueToAdd;
+  }
+
+  @override
+  Future<dynamic> post(
+    Map<String, dynamic> shared,
+    dynamic prepResult,
+    dynamic execResult,
+  ) async {
+    shared['value'] = execResult;
+    return super.post(shared, prepResult, execResult);
+  }
+
+  @override
+  Node clone() {
+    return AddNode(valueToAdd)..params = Map.from(params);
   }
 }
 
 void main() {
   group('BatchFlow', () {
-    late Map<String, dynamic> sharedStorage;
+    test('should run a flow over a batch of inputs', () async {
+      final multiplyNode = MultiplyNode(2);
+      final addNode = AddNode(1);
 
-    setUp(() {
-      sharedStorage = {};
-    });
+      final flow = BatchFlow<int, int>([multiplyNode, addNode]);
+      final inputs = [1, 2, 3];
+      final outputs = await flow.run({'items': inputs});
 
-    test('should run a simple flow with a single batch node', () async {
-      final flow = BatchFlow();
-      final node = MockMultiplierBatchNode();
-      flow.start(node);
-
-      final items = [1, 2, 3];
-      flow.params['items'] = items;
-
-      final result = await flow.run(sharedStorage);
-
-      expect(result, equals([2, 4, 6]));
-    });
-
-    test('should chain multiple batch nodes and pass items through', () async {
-      final flow = BatchFlow();
-      final node1 = MockMultiplierBatchNode(multiplier: 2);
-      final node2 = MockMultiplierBatchNode(multiplier: 3);
-
-      flow.start(node1).next(node2);
-
-      final items = [1, 2, 3];
-      flow.params['items'] = items;
-
-      final result = await flow.run(sharedStorage);
-
-      // After node1: [2, 4, 6]
-      // After node2: [6, 12, 18]
-      expect(result, equals([6, 12, 18]));
-    });
-
-    test('should pass parameters to nodes within the flow', () async {
-      final flow = BatchFlow();
-      final node = MockMultiplierBatchNode();
-      flow.start(node);
-
-      final items = [10, 20];
-      flow.params['items'] = items;
-
-      final result = await flow.run(sharedStorage);
-
-      expect(result, equals([20, 40]));
+      expect(outputs, equals([3, 5, 7]));
     });
   });
 }

@@ -32,15 +32,18 @@ void main() {
       sharedStorage = {};
     });
 
-    test('run processes items through all nodes in the flow asynchronously', () async {
-      final initialItems = [1, 2, 3];
-      flow.params['items'] = initialItems;
+    test(
+      'run processes items through all nodes in the flow asynchronously',
+      () async {
+        final initialItems = [1, 2, 3];
+        flow.params['items'] = initialItems;
 
-      final result = await flow.run(sharedStorage);
+        final result = await flow.run(sharedStorage);
 
-      // Node1 multiplies by 2: [2, 4, 6]
-      // Node2 adds 1: [3, 5, 7]
-      expect(result, equals([3, 5, 7]));
-    });
+        // Node1 multiplies by 2: [2, 4, 6]
+        // Node2 adds 1: [3, 5, 7]
+        expect(result, equals([3, 5, 7]));
+      },
+    );
   });
 }

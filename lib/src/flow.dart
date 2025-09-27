@@ -42,8 +42,11 @@ class Flow extends BaseNode {
     }
 
     for (var entry in originalNode.successors.entries) {
-      clonedNode.successors[entry.key] =
-          _cloneNode(entry.value, clonedNodes, namedNodes)!;
+      clonedNode.successors[entry.key] = _cloneNode(
+        entry.value,
+        clonedNodes,
+        namedNodes,
+      )!;
     }
 
     return clonedNode;
