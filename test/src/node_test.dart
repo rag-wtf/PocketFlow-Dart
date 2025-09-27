@@ -212,4 +212,28 @@ should rethrow the exception if retries are exhausted with default fallback''',
       expect(node.attempts, 1);
     });
   });
+
+  group('Node.clone()', () {
+    test('should create a new instance with a deep copy of params', () {
+      final original = Node(maxRetries: 3, wait: Duration(seconds: 1));
+      original.params['key'] = 'value';
+
+      final cloned = original.clone();
+
+      // Should be a new instance
+      expect(identical(original, cloned), isFalse);
+
+      // Properties should be the same
+      expect(cloned.maxRetries, original.maxRetries);
+      expect(cloned.wait, original.wait);
+
+      // Params should be a copy, not a reference
+      expect(cloned.params, equals(original.params));
+      expect(identical(cloned.params, original.params), isFalse);
+
+      // Modifying the cloned params should not affect the original
+      cloned.params['key'] = 'newValue';
+      expect(original.params['key'], 'value');
+    });
+  });
 }
