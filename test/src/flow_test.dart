@@ -13,6 +13,16 @@ class NumberNode extends Node {
   }
 }
 
+class StatefulNode extends Node {
+  int _counter = 0;
+
+  @override
+  Future<void> prep(Map<String, dynamic> sharedStorage) async {
+    _counter++;
+    sharedStorage['counter'] = _counter;
+  }
+}
+
 class AddNode extends Node {
   AddNode(this.number);
   final int number;
@@ -160,6 +170,19 @@ void main() {
 
       expect(sharedStorage['current'], -2);
       expect(lastAction, 'cycle_done');
+    });
+
+    test('should not persist state between runs', () async {
+      final pipeline = Flow();
+      pipeline.start(StatefulNode());
+
+      // First run
+      await pipeline.run(sharedStorage);
+      expect(sharedStorage['counter'], 1);
+
+      // Second run
+      await pipeline.run(sharedStorage);
+      expect(sharedStorage['counter'], 1);
     });
   });
 }
