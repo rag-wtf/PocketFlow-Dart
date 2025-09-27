@@ -13,6 +13,15 @@ class NumberNode extends Node {
   }
 }
 
+class ParameterNode extends Node {
+  @override
+  Future<void> prep(Map<String, dynamic> sharedStorage) async {
+    if (sharedStorage.containsKey('value')) {
+      sharedStorage['output'] = sharedStorage['value'];
+    }
+  }
+}
+
 class StatefulNode extends Node {
   int _counter = 0;
 
@@ -183,6 +192,21 @@ void main() {
       // Second run
       await pipeline.run(sharedStorage);
       expect(sharedStorage['counter'], 1);
+    });
+
+    test('should pass parameters to nodes', () async {
+      final pipeline = Flow();
+      final paramNode = ParameterNode();
+      pipeline.start(paramNode);
+
+      sharedStorage['__node_params__'] = {
+        paramNode: {'value': 123},
+      };
+
+      await pipeline.run(sharedStorage);
+
+      expect(sharedStorage['output'], 123);
+      expect(sharedStorage.containsKey('value'), isFalse);
     });
   });
 }
