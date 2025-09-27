@@ -47,8 +47,19 @@ Follow the tasks outlined in `specs/issues` in the specified order.
 3.  **Write Tests**: Write failing tests for the feature you are implementing.
 4.  **Implement**: Write the code to make the tests pass.
 5.  **Polish**: Add documentation, format, and lint the code.
-6.  **Submit Changes**: Submit the changes according to format of the `.github/PULL_REQUEST_TEMPLATE.md` file.
-
+6.  **Submit Changes**: Submit the changes according to format of the `.github/PULL_REQUEST_TEMPLATE.md` file with the following title formats:
+    - feat: A new feature
+    - fix: A bug fix
+    - docs: Documentation only changes
+    - style: Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc)
+    - refactor: A code change that neither fixes a bug nor adds a feature
+    - perf: A code change that improves performance
+    - test: Adding missing tests or correcting existing tests
+    - build: Changes that affect the build system or external dependencies (example scopes: gulp, broccoli, npm)
+    - ci: Changes to our CI configuration files and scripts (example scopes: Travis, Circle, BrowserStack, SauceLabs)
+    - chore: Other changes that don't modify src or test files
+    - revert: Reverts a previous commit
+    
 ## 6. Key Commands
 
 - **Run tests**: `dart test`
