@@ -12,6 +12,13 @@ class MockBatchNode extends BatchNode<int, int> {
     receivedItems = items;
     return items.map((item) => item * 2).toList();
   }
+
+  @override
+  BatchNode<int, int> clone() {
+    return MockBatchNode()
+      ..name = name
+      ..params = Map.from(params);
+  }
 }
 
 void main() {
@@ -42,5 +49,42 @@ void main() {
         reason: 'run should return the processed items',
       );
     });
+
+    test(
+      'run should throw ArgumentError if "items" parameter is missing',
+      () async {
+        // Intentionally not setting the 'items' parameter
+        expect(
+          () => node.run(sharedStorage),
+          throwsArgumentError,
+          reason: 'Should throw ArgumentError when items are null',
+        );
+      },
+    );
+
+    test(
+      'run should throw ArgumentError if "items" is not a List of the '
+      'correct type',
+      () async {
+        node.params['items'] = ['a', 'b', 'c']; // Invalid type
+        expect(
+          () => node.run(sharedStorage),
+          throwsArgumentError,
+          reason: 'Should throw ArgumentError for incorrect list type',
+        );
+      },
+    );
+
+    test(
+      'run should throw ArgumentError if "items" parameter is not a List',
+      () async {
+        node.params['items'] = 123; // Invalid type
+        expect(
+          () => node.run(sharedStorage),
+          throwsArgumentError,
+          reason: 'Should throw ArgumentError when items is not a list',
+        );
+      },
+    );
   });
 }

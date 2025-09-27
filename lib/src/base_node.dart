@@ -33,7 +33,8 @@ abstract class BaseNode {
     dynamic prepResult,
     dynamic execResult,
   ) async {
-    // Default implementation does nothing.
+    // Default implementation returns the execution result.
+    return execResult;
   }
 
   /// Executes the node's lifecycle (`prep` -> `exec` -> `post`).

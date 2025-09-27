@@ -11,6 +11,14 @@ class MockMultiplierBatchNode extends BatchNode<int, int> {
   Future<List<int>> exec(List<int> items) async {
     return items.map((item) => item * multiplier).toList();
   }
+
+  @override
+  BatchNode<int, int> clone() {
+    final cloned = MockMultiplierBatchNode(multiplier: multiplier);
+    cloned.name = name;
+    cloned.params = Map.from(params);
+    return cloned;
+  }
 }
 
 void main() {

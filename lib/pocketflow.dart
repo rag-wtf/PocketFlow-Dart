@@ -2,5 +2,6 @@
 library;
 
 export 'src/base_node.dart';
+export 'src/batch_node.dart';
 export 'src/flow.dart';
 export 'src/node.dart';
