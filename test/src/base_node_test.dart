@@ -119,10 +119,12 @@ void main() {
       expect(result, isNull);
     });
 
-    test('run with default implementations should complete and return null',
-        () async {
-      final result = await node.run(sharedStorage);
-      expect(result, isNull);
-    });
+    test(
+      'run with default implementations should complete and return null',
+      () async {
+        final result = await node.run(sharedStorage);
+        expect(result, isNull);
+      },
+    );
   });
 }

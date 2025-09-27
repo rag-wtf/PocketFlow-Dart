@@ -129,14 +129,15 @@ void main() {
     });
 
     test(
-        'should rethrow the exception if retries are exhausted with default fallback',
-        () async {
-      final node = FallibleNode(failCount: 3, maxRetries: 2);
-      await expectLater(
-        () => node.run(sharedStorage),
-        throwsA(isA<Exception>()),
-      );
-    });
+      'should rethrow the exception if retries are exhausted with default fallback',
+      () async {
+        final node = FallibleNode(failCount: 3, maxRetries: 2);
+        await expectLater(
+          () => node.run(sharedStorage),
+          throwsA(isA<Exception>()),
+        );
+      },
+    );
 
     test('should call custom fallback when retries are exhausted', () async {
       final node = FallibleNode(
