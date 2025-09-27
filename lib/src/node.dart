@@ -71,4 +71,14 @@ class Node extends BaseNode {
 
     return post(shared, prepResult, execResult);
   }
+
+  @override
+  Node clone() {
+    final cloned = Node(
+      maxRetries: maxRetries,
+      wait: wait,
+    );
+    cloned.params = Map.from(params);
+    return cloned;
+  }
 }

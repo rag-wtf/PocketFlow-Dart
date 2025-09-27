@@ -11,6 +11,13 @@ class NumberNode extends Node {
   Future<void> prep(Map<String, dynamic> sharedStorage) async {
     sharedStorage['current'] = number;
   }
+
+  @override
+  Node clone() {
+    final cloned = NumberNode(number);
+    cloned.params = Map.from(params);
+    return cloned;
+  }
 }
 
 class AddNode extends Node {
@@ -21,6 +28,13 @@ class AddNode extends Node {
   Future<void> prep(Map<String, dynamic> sharedStorage) async {
     sharedStorage['current'] = (sharedStorage['current'] as int? ?? 0) + number;
   }
+
+  @override
+  Node clone() {
+    final cloned = AddNode(number);
+    cloned.params = Map.from(params);
+    return cloned;
+  }
 }
 
 class MultiplyNode extends Node {
@@ -30,6 +44,13 @@ class MultiplyNode extends Node {
   @override
   Future<void> prep(Map<String, dynamic> sharedStorage) async {
     sharedStorage['current'] = (sharedStorage['current'] as int? ?? 0) * number;
+  }
+
+  @override
+  Node clone() {
+    final cloned = MultiplyNode(number);
+    cloned.params = Map.from(params);
+    return cloned;
   }
 }
 
@@ -79,6 +100,21 @@ class FallibleNode extends Node {
   ) async {
     // Return the execResult so it can be asserted in tests.
     return execResult;
+  }
+
+  @override
+  Node clone() {
+    final cloned = FallibleNode(
+      failCount: failCount,
+      successValue: successValue,
+      fallbackValue: fallbackValue,
+      useCustomFallback: useCustomFallback,
+      rethrowNonException: rethrowNonException,
+      maxRetries: maxRetries,
+      wait: wait,
+    );
+    cloned.params = Map.from(params);
+    return cloned;
   }
 }
 

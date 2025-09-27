@@ -11,14 +11,28 @@ class NumberNode extends Node {
   Future<void> prep(Map<String, dynamic> sharedStorage) async {
     sharedStorage['current'] = number;
   }
+
+  @override
+  Node clone() {
+    final cloned = NumberNode(number);
+    cloned.params = Map.from(params);
+    return cloned;
+  }
 }
 
 class ParameterNode extends Node {
   @override
   Future<void> prep(Map<String, dynamic> sharedStorage) async {
-    if (sharedStorage.containsKey('value')) {
-      sharedStorage['output'] = sharedStorage['value'];
+    if (params.containsKey('value')) {
+      sharedStorage['output'] = params['value'];
     }
+  }
+
+  @override
+  Node clone() {
+    final cloned = ParameterNode();
+    cloned.params = Map.from(params);
+    return cloned;
   }
 }
 
@@ -30,6 +44,13 @@ class StatefulNode extends Node {
     _counter++;
     sharedStorage['counter'] = _counter;
   }
+
+  @override
+  Node clone() {
+    final cloned = StatefulNode();
+    cloned.params = Map.from(params);
+    return cloned;
+  }
 }
 
 class AddNode extends Node {
@@ -40,6 +61,13 @@ class AddNode extends Node {
   Future<void> prep(Map<String, dynamic> sharedStorage) async {
     sharedStorage['current'] = (sharedStorage['current'] as int? ?? 0) + number;
   }
+
+  @override
+  Node clone() {
+    final cloned = AddNode(number);
+    cloned.params = Map.from(params);
+    return cloned;
+  }
 }
 
 class MultiplyNode extends Node {
@@ -49,6 +77,13 @@ class MultiplyNode extends Node {
   @override
   Future<void> prep(Map<String, dynamic> sharedStorage) async {
     sharedStorage['current'] = (sharedStorage['current'] as int? ?? 0) * number;
+  }
+
+  @override
+  Node clone() {
+    final cloned = MultiplyNode(number);
+    cloned.params = Map.from(params);
+    return cloned;
   }
 }
 
@@ -65,6 +100,13 @@ class CheckPositiveNode extends Node {
       return 'negative';
     }
   }
+
+  @override
+  Node clone() {
+    final cloned = CheckPositiveNode();
+    cloned.params = Map.from(params);
+    return cloned;
+  }
 }
 
 class EndSignalNode extends Node {
@@ -78,6 +120,13 @@ class EndSignalNode extends Node {
     dynamic execResult,
   ) async {
     return signal;
+  }
+
+  @override
+  Node clone() {
+    final cloned = EndSignalNode(signal);
+    cloned.params = Map.from(params);
+    return cloned;
   }
 }
 

@@ -22,28 +22,50 @@ class Flow extends BaseNode {
     return node;
   }
 
+  BaseNode? _cloneNode(
+    BaseNode? originalNode,
+    Map<BaseNode, BaseNode> clonedNodes,
+  ) {
+    if (originalNode == null) {
+      return null;
+    }
+    if (clonedNodes.containsKey(originalNode)) {
+      return clonedNodes[originalNode]!;
+    }
+
+    final clonedNode = originalNode.clone();
+    clonedNodes[originalNode] = clonedNode;
+
+    for (var entry in originalNode.successors.entries) {
+      clonedNode.successors[entry.key] =
+          _cloneNode(entry.value, clonedNodes)!;
+    }
+
+    return clonedNode;
+  }
+
   @override
-  /// Executes the flow, starting from the `start` node.
-  ///
-  /// It traverses the graph of nodes until it reaches a node with no further
-  /// connections. The next node is determined by the return value of the
-  /// current node's `run` method.
-  ///
-  /// - If the return value is a [String] that matches a key in the current
-  ///   node's `successors` map, the corresponding successor node is executed
-  ///   next.
-  /// - Otherwise, if a 'default' successor exists, it is executed.
-  /// - If neither of the above conditions is met, the flow terminates.
-  ///
-  /// Throws a [StateError] if the start node has not been set.
-  ///
-  /// Returns the result of the last executed node in the flow.
   Future<dynamic> run(Map<String, dynamic> shared) async {
     if (_start == null) {
       throw StateError('The start node has not been set.');
     }
 
-    BaseNode? currentNode = _start;
+    final clonedNodes = <BaseNode, BaseNode>{};
+    final clonedStart = _cloneNode(_start, clonedNodes);
+
+    final nodeParams =
+        shared['__node_params__'] as Map<BaseNode, Map<String, dynamic>>?;
+    if (nodeParams != null) {
+      for (var entry in nodeParams.entries) {
+        final originalNode = entry.key;
+        final params = entry.value;
+        if (clonedNodes.containsKey(originalNode)) {
+          clonedNodes[originalNode]!.params.addAll(params);
+        }
+      }
+    }
+
+    var currentNode = clonedStart;
     dynamic lastResult;
 
     while (currentNode != null) {
@@ -60,5 +82,20 @@ class Flow extends BaseNode {
     }
 
     return lastResult;
+  }
+
+  @override
+  Flow clone() {
+    final clonedFlow = Flow();
+    clonedFlow.params = Map.from(params);
+
+    if (_start == null) {
+      return clonedFlow;
+    }
+
+    final clonedNodes = <BaseNode, BaseNode>{};
+    clonedFlow._start = _cloneNode(_start, clonedNodes) as Node?;
+
+    return clonedFlow;
   }
 }

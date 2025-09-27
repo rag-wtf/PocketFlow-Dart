@@ -39,4 +39,9 @@ abstract class BaseNode {
     final execResult = await exec(prepResult);
     return post(shared, prepResult, execResult);
   }
+
+  /// Creates a copy of the node.
+  ///
+  /// Subclasses should implement this method to support cloning of nodes.
+  BaseNode clone();
 }

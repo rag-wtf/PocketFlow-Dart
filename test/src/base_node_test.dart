@@ -36,10 +36,24 @@ class MockNode extends BaseNode {
     receivedExecResult = execResult;
     return postResult;
   }
+
+  @override
+  BaseNode clone() {
+    final cloned = MockNode();
+    cloned.params = Map.from(params);
+    return cloned;
+  }
 }
 
 // A node that uses the default prep, exec, and post implementations.
-class DefaultNode extends BaseNode {}
+class DefaultNode extends BaseNode {
+  @override
+  BaseNode clone() {
+    final cloned = DefaultNode();
+    cloned.params = Map.from(params);
+    return cloned;
+  }
+}
 
 void main() {
   group('BaseNode', () {
