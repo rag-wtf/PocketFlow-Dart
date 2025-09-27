@@ -1,14 +1,61 @@
-# Pocketflow
+# PocketFlow Dart
 
 [![style: very good analysis][very_good_analysis_badge]][very_good_analysis_link]
 [![Powered by Mason](https://img.shields.io/endpoint?url=https%3A%2F%2Ftinyurl.com%2Fmason-badge)](https://github.com/felangel/mason)
 [![License: MIT][license_badge]][license_link]
 
-A minimalist LLM framework, ported from Python to Dart.
+A minimalist LLM framework, ported from Python to Dart. PocketFlow provides a lightweight, graph-based workflow system for building LLM applications with support for node chaining, conditional branching, batch processing, and async execution.
+
+## Features
+
+- **🔗 Node-based Workflows**: Create complex workflows by chaining nodes together
+- **🔀 Conditional Branching**: Route execution based on node results
+- **📦 Batch Processing**: Process collections of data efficiently
+- **⚡ Async Support**: Full async/await support for non-blocking operations
+- **🎯 Type Safe**: Built with Dart's sound null safety
+- **🪶 Lightweight**: Zero external dependencies for the core library
+- **🔧 Extensible**: Easy to extend with custom node types
+
+## Quick Start
+
+```dart
+import 'package:pocketflow/pocketflow.dart';
+
+// Create a simple text processing node
+class UppercaseNode extends BaseNode<String> {
+  @override
+  String? exec(dynamic prepRes) {
+    return (prepRes as String).toUpperCase();
+  }
+}
+
+// Create a formatting node
+class BracketNode extends BaseNode<String> {
+  @override
+  String? exec(dynamic prepRes) {
+    return '[$prepRes]';
+  }
+}
+
+void main() {
+  // Chain nodes together
+  final uppercase = UppercaseNode();
+  final bracket = BracketNode();
+  uppercase >> bracket;
+
+  // Create and run flow
+  final flow = Flow<String>();
+  flow.start(uppercase);
+
+  final shared = {'input': 'hello world'};
+  final result = flow.run(shared);
+  // Output: [HELLO WORLD]
+}
+```
 
 ## Installation 💻
 
-**❗ In order to start using Pocketflow you must have the [Dart SDK][dart_install_link] installed on your machine.**
+**❗ In order to start using PocketFlow you must have the [Dart SDK][dart_install_link] installed on your machine.**
 
 Install via `dart pub add`:
 
@@ -16,13 +63,78 @@ Install via `dart pub add`:
 dart pub add pocketflow
 ```
 
+## Core Concepts
+
+### BaseNode
+The foundation of all workflow components. Provides three lifecycle methods:
+- `prep(shared)`: Prepare data for execution
+- `exec(prepRes)`: Execute the main logic
+- `post(shared, prepRes, execRes)`: Post-process and return next action
+
+### Node
+Extends BaseNode with retry logic and error handling:
+- Configurable retry attempts with wait times
+- Custom fallback handling via `execFallback()`
+
+### Flow
+Orchestrates node execution:
+- Manages workflow state and transitions
+- Handles conditional branching based on node results
+- Supports parameter passing between nodes
+
+### Chaining Operators
+- `>>`: Chain nodes with default transition
+- `-`: Create conditional transitions (e.g., `nodeA - 'success' >> nodeB`)
+
+## Examples
+
+### Conditional Workflow
+```dart
+final validator = ValidationNode();
+final successNode = SuccessNode();
+final errorNode = ErrorNode();
+
+// Set up conditional branches
+(validator - 'valid') >> successNode;
+(validator - 'invalid') >> errorNode;
+
+final flow = Flow();
+flow.start(validator);
+```
+
+### Batch Processing
+```dart
+class BatchProcessor extends BatchNode<String> {
+  @override
+  String? execSingle(dynamic item) {
+    return item.toString().toUpperCase();
+  }
+}
+
+final batchNode = BatchProcessor();
+// Processes: ['a', 'b', 'c'] -> ['A', 'B', 'C']
+```
+
+### Async Workflows
+```dart
+class AsyncProcessor extends AsyncNode<String> {
+  @override
+  Future<String?> execAsync(dynamic prepRes) async {
+    await Future.delayed(Duration(seconds: 1));
+    return 'Processed: $prepRes';
+  }
+}
+
+final asyncFlow = AsyncFlow();
+asyncFlow.start(AsyncProcessor());
+await asyncFlow.runAsync(shared);
+```
+
 ---
 
-## Continuous Integration 🤖
+## Development 🛠️
 
-Pocketflow comes with a built-in [GitHub Actions workflow][github_actions_link] powered by [Very Good Workflows][very_good_workflows_link] but you can also add your preferred CI/CD solution.
-
-Out of the box, on each pull request and push, the CI `formats`, `lints`, and `tests` the code. This ensures the code remains consistent and behaves correctly as you add functionality or make changes. The project uses [Very Good Analysis][very_good_analysis_link] for a strict set of analysis options used by our team. Code coverage is enforced using the [Very Good Workflows][very_good_coverage_link].
+This project follows Test-Last Development (TLD) principles and uses [Very Good Analysis][very_good_analysis_link] for code quality.
 
 ---
 
