@@ -127,4 +127,16 @@ void main() {
       },
     );
   });
+
+  group('BaseNode.clone()', () {
+    test('should create a new instance with the same properties', () {
+      final original = MockNode();
+      original.params['key'] = 'value';
+
+      final cloned = original.clone();
+
+      expect(cloned, isNot(same(original)));
+      expect(cloned.params, equals(original.params));
+    });
+  });
 }
