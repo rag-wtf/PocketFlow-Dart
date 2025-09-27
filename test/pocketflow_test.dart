@@ -11,6 +11,30 @@ class _TestNode extends BaseNode {
   }
 }
 
+class _AddValueNode1 extends Node {
+  @override
+  Future<dynamic> exec(dynamic prepResult) async {
+    params['value'] = (params['value'] as int) + 1;
+    return params;
+  }
+}
+
+class _AddValueNode2 extends Node {
+  @override
+  Future<dynamic> exec(dynamic prepResult) async {
+    params['value'] = (params['value'] as int) + 2;
+    return params;
+  }
+}
+
+class _AddValueNode3 extends Node {
+  @override
+  Future<dynamic> exec(dynamic prepResult) async {
+    params['value'] = (params['value'] as int) + 3;
+    return params;
+  }
+}
+
 void main() {
   group('pocketflow', () {
     test('should export BaseNode', () {
@@ -25,6 +49,16 @@ void main() {
 
     test('should export Flow', () {
       final flow = Flow();
+      expect(flow, isA<Flow>());
+    });
+
+    test('should support operator overloading', () {
+      final node1 = _AddValueNode1();
+      final node2 = _AddValueNode2();
+      final node3 = _AddValueNode3();
+
+      final flow = node1 >> node2 - node3;
+
       expect(flow, isA<Flow>());
     });
   });
