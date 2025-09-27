@@ -35,7 +35,6 @@ class MultiplyNode extends Node {
 
 // A test node that can be configured to fail.
 class FallibleNode extends Node {
-
   FallibleNode({
     this.failCount = 0,
     this.successValue = 'success',
@@ -57,7 +56,7 @@ class FallibleNode extends Node {
     attempts++;
     if (attempts <= failCount) {
       if (rethrowNonException) {
-        throw 'a non-exception error';
+        throw ArgumentError('a non-exception error');
       }
       throw Exception('Failed on attempt $attempts');
     }
@@ -129,7 +128,8 @@ void main() {
     });
 
     test(
-      'should rethrow the exception if retries are exhausted with default fallback',
+      '''
+should rethrow the exception if retries are exhausted with default fallback''',
       () async {
         final node = FallibleNode(failCount: 3, maxRetries: 2);
         await expectLater(
@@ -170,7 +170,7 @@ void main() {
       );
       await expectLater(
         () => node.run(sharedStorage),
-        throwsA(isA<String>()),
+        throwsA(isA<ArgumentError>()),
       );
       // Fallback should not be reached, so attempts should be 1
       expect(node.attempts, 1);
