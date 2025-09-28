@@ -46,6 +46,12 @@ abstract class BaseNode {
   /// accessible within the `prep`, `exec`, and `post` methods.
   Map<String, dynamic> params = {};
 
+  /// A function for logging messages.
+  ///
+  /// This can be overridden to use a different logging mechanism. The default
+  /// implementation does nothing.
+  void Function(String) log = (_) {};
+
   /// The successor nodes.
   ///
   /// This is a map of action names to successor nodes. When a node finishes
@@ -61,7 +67,7 @@ abstract class BaseNode {
   /// Returns the [node] for chaining.
   BaseNode next(BaseNode node, {String action = 'default'}) {
     if (successors.containsKey(action)) {
-      print(
+      log(
         'Warning: Overwriting existing successor for action "$action" on node '
         '"${name ?? runtimeType}".',
       );
@@ -139,7 +145,7 @@ abstract class BaseNode {
   /// Returns the result of the `post` method.
   Future<dynamic> run(Map<String, dynamic> shared) async {
     if (successors.isNotEmpty) {
-      print(
+      log(
         'Warning: Calling run() on a node with successors has no effect on '
         'flow execution. To execute the entire flow, call run() on the Flow '
         'instance instead.',

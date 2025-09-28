@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:pocketflow/pocketflow.dart';
 import 'package:pocketflow/src/base_node.dart';
 import 'package:test/test.dart';
@@ -14,22 +12,13 @@ class TestNode extends BaseNode {
 void main() {
   test('should log a warning when a successor is overwritten', () async {
     final logs = <String>[];
-    await runZoned(
-      () async {
-        final nodeA = TestNode();
-        final nodeB = TestNode();
-        final nodeC = TestNode();
+    final nodeA = TestNode()..log = logs.add;
+    final nodeB = TestNode();
+    final nodeC = TestNode();
 
-        nodeA
-          ..next(nodeB)
-          ..next(nodeC);
-      },
-      zoneSpecification: ZoneSpecification(
-        print: (self, parent, zone, line) {
-          logs.add(line);
-        },
-      ),
-    );
+    nodeA
+      ..next(nodeB)
+      ..next(nodeC);
 
     expect(
       logs.any((log) => log.contains('Overwriting existing successor')),
@@ -42,20 +31,11 @@ void main() {
     'outside of a Flow',
     () async {
       final logs = <String>[];
-      await runZoned(
-        () async {
-          final nodeA = TestNode();
-          final nodeB = TestNode();
-          nodeA.next(nodeB);
+      final nodeA = TestNode()..log = logs.add;
+      final nodeB = TestNode();
+      nodeA.next(nodeB);
 
-          await nodeA.run({});
-        },
-        zoneSpecification: ZoneSpecification(
-          print: (self, parent, zone, line) {
-            logs.add(line);
-          },
-        ),
-      );
+      await nodeA.run({});
 
       expect(
         logs.any(

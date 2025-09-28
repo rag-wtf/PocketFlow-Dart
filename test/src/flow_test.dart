@@ -14,10 +14,9 @@ class NumberNode extends Node {
 
   @override
   Node clone() {
-    final cloned = NumberNode(number);
-    cloned.name = name;
-    cloned.params = Map.from(params);
-    return cloned;
+    return NumberNode(number)
+      ..name = name
+      ..params = Map.from(params);
   }
 }
 
@@ -31,10 +30,9 @@ class ParameterNode extends Node {
 
   @override
   Node clone() {
-    final cloned = ParameterNode();
-    cloned.name = name;
-    cloned.params = Map.from(params);
-    return cloned;
+    return ParameterNode()
+      ..name = name
+      ..params = Map.from(params);
   }
 }
 
@@ -49,10 +47,9 @@ class StatefulNode extends Node {
 
   @override
   Node clone() {
-    final cloned = StatefulNode();
-    cloned.name = name;
-    cloned.params = Map.from(params);
-    return cloned;
+    return StatefulNode()
+      ..name = name
+      ..params = Map.from(params);
   }
 }
 
@@ -67,10 +64,9 @@ class AddNode extends Node {
 
   @override
   Node clone() {
-    final cloned = AddNode(number);
-    cloned.name = name;
-    cloned.params = Map.from(params);
-    return cloned;
+    return AddNode(number)
+      ..name = name
+      ..params = Map.from(params);
   }
 }
 
@@ -85,10 +81,9 @@ class MultiplyNode extends Node {
 
   @override
   Node clone() {
-    final cloned = MultiplyNode(number);
-    cloned.name = name;
-    cloned.params = Map.from(params);
-    return cloned;
+    return MultiplyNode(number)
+      ..name = name
+      ..params = Map.from(params);
   }
 }
 
@@ -108,10 +103,9 @@ class CheckPositiveNode extends Node {
 
   @override
   Node clone() {
-    final cloned = CheckPositiveNode();
-    cloned.name = name;
-    cloned.params = Map.from(params);
-    return cloned;
+    return CheckPositiveNode()
+      ..name = name
+      ..params = Map.from(params);
   }
 }
 
@@ -130,10 +124,9 @@ class EndSignalNode extends Node {
 
   @override
   Node clone() {
-    final cloned = EndSignalNode(signal);
-    cloned.name = name;
-    cloned.params = Map.from(params);
-    return cloned;
+    return EndSignalNode(signal)
+      ..name = name
+      ..params = Map.from(params);
   }
 }
 
@@ -152,15 +145,14 @@ class _TestCloneNode extends Node {
     dynamic execResult,
   ) async {
     // Return the value from the params so we can check it in tests.
-    return execResult['value'];
+    return (execResult as Map<String, dynamic>)['value'];
   }
 
   @override
   Node clone() {
-    final cloned = _TestCloneNode();
-    cloned.name = name;
-    cloned.params = Map.from(params);
-    return cloned;
+    return _TestCloneNode()
+      ..name = name
+      ..params = Map.from(params);
   }
 }
 
@@ -265,8 +257,7 @@ void main() {
     });
 
     test('should not persist state between runs', () async {
-      final pipeline = Flow();
-      pipeline.start(StatefulNode());
+      final pipeline = Flow()..start(StatefulNode());
 
       // First run
       await pipeline.run(sharedStorage);

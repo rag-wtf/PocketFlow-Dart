@@ -14,9 +14,7 @@ class NumberNode extends Node {
 
   @override
   Node clone() {
-    final cloned = NumberNode(number);
-    cloned.params = Map.from(params);
-    return cloned;
+    return NumberNode(number)..params = Map.from(params);
   }
 }
 
@@ -31,9 +29,7 @@ class AddNode extends Node {
 
   @override
   Node clone() {
-    final cloned = AddNode(number);
-    cloned.params = Map.from(params);
-    return cloned;
+    return AddNode(number)..params = Map.from(params);
   }
 }
 
@@ -48,9 +44,7 @@ class MultiplyNode extends Node {
 
   @override
   Node clone() {
-    final cloned = MultiplyNode(number);
-    cloned.params = Map.from(params);
-    return cloned;
+    return MultiplyNode(number)..params = Map.from(params);
   }
 }
 
@@ -104,7 +98,7 @@ class FallibleNode extends Node {
 
   @override
   Node clone() {
-    final cloned = FallibleNode(
+    return FallibleNode(
       failCount: failCount,
       successValue: successValue,
       fallbackValue: fallbackValue,
@@ -112,9 +106,7 @@ class FallibleNode extends Node {
       rethrowNonException: rethrowNonException,
       maxRetries: maxRetries,
       wait: wait,
-    );
-    cloned.params = Map.from(params);
-    return cloned;
+    )..params = Map.from(params);
   }
 }
 
@@ -215,7 +207,7 @@ should rethrow the exception if retries are exhausted with default fallback''',
 
   group('Node.clone()', () {
     test('should create a new instance with a deep copy of params', () {
-      final original = Node(maxRetries: 3, wait: Duration(seconds: 1));
+      final original = Node(maxRetries: 3, wait: const Duration(seconds: 1));
       original.params['key'] = 'value';
 
       final cloned = original.clone();

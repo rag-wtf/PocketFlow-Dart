@@ -39,9 +39,7 @@ class MockNode extends BaseNode {
 
   @override
   BaseNode clone() {
-    final cloned = MockNode();
-    cloned.params = Map.from(params);
-    return cloned;
+    return MockNode()..params = Map.from(params);
   }
 }
 
@@ -49,9 +47,7 @@ class MockNode extends BaseNode {
 class DefaultNode extends BaseNode {
   @override
   BaseNode clone() {
-    final cloned = DefaultNode();
-    cloned.params = Map.from(params);
-    return cloned;
+    return DefaultNode()..params = Map.from(params);
   }
 }
 

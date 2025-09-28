@@ -4,7 +4,8 @@ import 'package:test/test.dart';
 void main() {
   group('AsyncParallelBatchNode', () {
     test(
-      'should process a batch of inputs and return a batch of outputs in parallel',
+      'should process a batch of inputs and return a batch of outputs '
+      'in parallel',
       () async {
         final node = AsyncParallelBatchNode<int, int>(
           (value) => Future.delayed(
