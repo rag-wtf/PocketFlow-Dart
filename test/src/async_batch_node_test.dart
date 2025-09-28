@@ -8,7 +8,7 @@ void main() {
       () async {
         // Define an async function to process the batch of items
         Future<List<String>> processItems(List<int> items) async {
-        await Future<void>.delayed(const Duration(milliseconds: 10));
+          await Future<void>.delayed(const Duration(milliseconds: 10));
           return items.map((item) => 'Processed: $item').toList();
         }
 

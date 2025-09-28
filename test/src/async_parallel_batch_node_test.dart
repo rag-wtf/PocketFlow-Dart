@@ -1,51 +1,38 @@
-import 'package:pocketflow/pocketflow.dart';
+import 'package:pocketflow/src/async_parallel_batch_node.dart';
 import 'package:test/test.dart';
-
-// A mock implementation of AsyncParallelBatchNode to test its functionalities.
-class MockAsyncParallelBatchNode extends AsyncParallelBatchNode<int, int> {
-  bool execCalled = false;
-  List<int>? receivedItems;
-
-  @override
-  Future<List<int>> exec(List<int> items) async {
-    execCalled = true;
-    receivedItems = items;
-    // Simulate an async operation
-    await Future.delayed(const Duration(milliseconds: 10));
-    return items.map((item) => item * 2).toList();
-  }
-}
 
 void main() {
   group('AsyncParallelBatchNode', () {
-    late MockAsyncParallelBatchNode node;
-    late Map<String, dynamic> sharedStorage;
-
-    setUp(() {
-      node = MockAsyncParallelBatchNode();
-      sharedStorage = {};
-    });
-
     test(
-      'run should process a batch of items in parallel asynchronously',
+      'should process a batch of inputs and return a batch of outputs in parallel',
       () async {
-        final items = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-        node.params['items'] = items; // Pass items to the node
-
-        final result = await node.run(sharedStorage);
-
-        expect(node.execCalled, isTrue, reason: 'exec should be called');
-        expect(
-          node.receivedItems,
-          equals(items),
-          reason: 'exec should receive the list of items',
+        final node = AsyncParallelBatchNode<int, int>(
+          (value) => Future.delayed(
+            const Duration(milliseconds: 100),
+            () => value * 2,
+          ),
         );
-        expect(
-          result,
-          equals([2, 4, 6, 8, 10, 12, 14, 16, 18, 20]),
-          reason: 'run should return the processed items',
-        );
+        final inputs = [1, 2, 3];
+        final outputs = await node.call(inputs);
+        expect(outputs, equals([2, 4, 6]));
       },
     );
+
+    test('should handle an empty batch', () async {
+      final node = AsyncParallelBatchNode<int, int>(
+        (value) => Future.value(value * 2),
+      );
+      final inputs = <int>[];
+      final outputs = await node.call(inputs);
+      expect(outputs, isEmpty);
+    });
+
+    test('should propagate errors for failing futures', () async {
+      final node = AsyncParallelBatchNode<int, int>(
+        (value) => Future.error('An error occurred'),
+      );
+      final inputs = [1, 2, 3];
+      expect(node.call(inputs), throwsA(isA<String>()));
+    });
   });
 }
