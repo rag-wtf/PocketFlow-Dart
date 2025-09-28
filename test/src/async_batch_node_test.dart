@@ -1,48 +1,62 @@
 import 'package:pocketflow/pocketflow.dart';
 import 'package:test/test.dart';
 
-// A mock implementation of AsyncBatchNode to test its functionalities.
-class MockAsyncBatchNode extends AsyncBatchNode<int, int> {
-  bool execCalled = false;
-  List<int>? receivedItems;
-
-  @override
-  Future<List<int>> exec(List<int> items) async {
-    execCalled = true;
-    receivedItems = items;
-    // Simulate an async operation
-    await Future.delayed(const Duration(milliseconds: 10));
-    return items.map((item) => item * 2).toList();
-  }
-}
-
 void main() {
   group('AsyncBatchNode', () {
-    late MockAsyncBatchNode node;
-    late Map<String, dynamic> sharedStorage;
+    test(
+      'should process a batch of items with the provided function',
+      () async {
+        // Define an async function to process the batch of items
+        Future<List<String>> processItems(List<int> items) async {
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+          return items.map((item) => 'Processed: $item').toList();
+        }
 
-    setUp(() {
-      node = MockAsyncBatchNode();
-      sharedStorage = {};
+        // Create an instance of AsyncBatchNode with the processing function
+        final node = AsyncBatchNode<int, String>(processItems);
+
+        // Set the input items for the node
+        final inputItems = [1, 2, 3];
+        node.params['items'] = inputItems;
+
+        // Execute the node
+        final result = await node.run({});
+
+        // Verify the result
+        expect(
+          result,
+          equals(['Processed: 1', 'Processed: 2', 'Processed: 3']),
+        );
+      },
+    );
+
+    test('should throw an error if items are not provided', () async {
+      // Create an instance of AsyncBatchNode without providing items
+      final node = AsyncBatchNode<int, String>((items) async => []);
+
+      // Expect the run method to throw an ArgumentError
+      expect(
+        () => node.run({}),
+        throwsA(isA<ArgumentError>()),
+      );
     });
 
-    test('run should process a batch of items asynchronously', () async {
-      final items = [1, 2, 3];
-      node.params['items'] = items; // Pass items to the node
+    test('clone should create a new instance with the same function', () async {
+      // Define an async function
+      Future<List<int>> process(List<int> items) async =>
+          items.map((i) => i * 2).toList();
 
-      final result = await node.run(sharedStorage);
+      // Create and clone the node
+      final original = AsyncBatchNode<int, int>(process);
+      original.params['items'] = [1, 2, 3];
+      final clone = original.clone();
 
-      expect(node.execCalled, isTrue, reason: 'exec should be called');
-      expect(
-        node.receivedItems,
-        equals(items),
-        reason: 'exec should receive the list of items',
-      );
-      expect(
-        result,
-        equals([2, 4, 6]),
-        reason: 'run should return the processed items',
-      );
+      // Ensure the clone is a different instance
+      expect(identical(original, clone), isFalse);
+
+      // Execute the clone and verify its behavior
+      final result = await clone.run({});
+      expect(result, equals([2, 4, 6]));
     });
   });
 }

@@ -1,33 +1,26 @@
 import 'package:pocketflow/pocketflow.dart';
 import 'package:test/test.dart';
 
-// Mock nodes for testing AsyncBatchFlow
-class MockAsyncBatchNode1 extends AsyncBatchNode<int, int> {
-  @override
-  Future<List<int>> exec(List<int> items) async {
-    await Future.delayed(const Duration(milliseconds: 10));
-    return items.map((i) => i * 2).toList();
-  }
-}
-
-class MockAsyncBatchNode2 extends AsyncBatchNode<int, int> {
-  @override
-  Future<List<int>> exec(List<int> items) async {
-    await Future.delayed(const Duration(milliseconds: 10));
-    return items.map((i) => i + 1).toList();
-  }
-}
-
 void main() {
   group('AsyncBatchFlow', () {
     late AsyncBatchFlow<int, int> flow;
-    late MockAsyncBatchNode1 node1;
-    late MockAsyncBatchNode2 node2;
+    late AsyncBatchNode<int, int> node1;
+    late AsyncBatchNode<int, int> node2;
     late Map<String, dynamic> sharedStorage;
 
     setUp(() {
-      node1 = MockAsyncBatchNode1();
-      node2 = MockAsyncBatchNode2();
+      // Define the first node's processing logic
+      node1 = AsyncBatchNode<int, int>((items) async {
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+        return items.map((i) => i * 2).toList();
+      });
+
+      // Define the second node's processing logic
+      node2 = AsyncBatchNode<int, int>((items) async {
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+        return items.map((i) => i + 1).toList();
+      });
+
       flow = AsyncBatchFlow<int, int>([node1, node2]);
       sharedStorage = {};
     });
