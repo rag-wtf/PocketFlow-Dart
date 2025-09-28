@@ -19,7 +19,7 @@ class AsyncBatchNode<I, O> extends Node {
 
   @override
   Future<List<I>> prep(Map<String, dynamic> shared) async {
-    final items = params['items'];
+    final items = shared['items'] ?? params['items'];
 
     if (items == null) {
       throw ArgumentError('The "items" parameter must be provided.');
@@ -55,5 +55,12 @@ class AsyncBatchNode<I, O> extends Node {
     return AsyncBatchNode<I, O>(_execFunction)
       ..name = name
       ..params = Map.from(params);
+  }
+
+  @override
+  Future<dynamic> run(Map<String, dynamic> shared) async {
+    final result = await super.run(shared);
+    shared['items'] = result;
+    return result;
   }
 }

@@ -10,14 +10,14 @@ class Flow extends BaseNode {
   ///
   /// An optional [start] node can be provided to set the entry point of the
   /// flow.
-  Flow({Node? start}) : _start = start;
+  Flow({BaseNode? start}) : _start = start;
 
-  Node? _start;
+  BaseNode? _start;
 
   /// Sets the starting [node] for the flow.
   ///
   /// Returns the [node] that was set as the start node.
-  Node start(Node node) {
+  BaseNode start(BaseNode node) {
     _start = node;
     return node;
   }
@@ -41,7 +41,7 @@ class Flow extends BaseNode {
       namedNodes[originalNode.name!] = clonedNode;
     }
 
-    for (var entry in originalNode.successors.entries) {
+    for (final entry in originalNode.successors.entries) {
       clonedNode.successors[entry.key] = _cloneNode(
         entry.value,
         clonedNodes,
@@ -65,7 +65,7 @@ class Flow extends BaseNode {
     final nodeParams =
         shared['__node_params__'] as Map<String, Map<String, dynamic>>?;
     if (nodeParams != null) {
-      for (var entry in nodeParams.entries) {
+      for (final entry in nodeParams.entries) {
         final nodeName = entry.key;
         final params = entry.value;
         if (namedNodes.containsKey(nodeName)) {
@@ -99,16 +99,14 @@ class Flow extends BaseNode {
   /// but they should call `super.clone()` to ensure the base properties are
   /// copied.
   T copy<T extends Flow>([T Function()? factory]) {
-    final clonedFlow = (factory != null ? factory() : Flow()) as T;
-    clonedFlow.name = name;
-    clonedFlow.params = Map.from(params);
+    final clonedFlow = ((factory != null ? factory() : Flow()) as T)
+      ..name = name
+      ..params = Map.from(params);
 
-    if (_start == null) {
-      return clonedFlow;
+    if (_start != null) {
+      final clonedNodes = <BaseNode, BaseNode>{};
+      clonedFlow._start = _cloneNode(_start!, clonedNodes);
     }
-
-    final clonedNodes = <BaseNode, BaseNode>{};
-    clonedFlow._start = _cloneNode(_start, clonedNodes) as Node?;
 
     return clonedFlow;
   }

@@ -1,6 +1,7 @@
 /// A pure Dart library for creating and executing graph-based workflows.
 library;
 
+export 'src/async_batch_flow.dart';
 export 'src/async_batch_node.dart';
 export 'src/async_flow.dart';
 export 'src/async_node.dart';
