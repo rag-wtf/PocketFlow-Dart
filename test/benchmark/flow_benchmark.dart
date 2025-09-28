@@ -67,7 +67,7 @@ void main() {
           '__node_params__': {
             'add1': {'a': i, 'b': i + 1},
             'add2': {'a': i + 2, 'b': i + 3},
-          }
+          },
         });
       }
 

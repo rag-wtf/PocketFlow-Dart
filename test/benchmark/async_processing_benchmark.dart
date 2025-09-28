@@ -3,27 +3,27 @@ import 'package:test/test.dart';
 
 class AsyncAddNode extends AsyncNode {
   AsyncAddNode()
-      : super((params) async {
-          await Future<void>.delayed(Duration.zero);
-          final p = params as Map<String, dynamic>;
-          final a = p['a'] as int;
-          final b = p['b'] as int;
-          return {'c': a + b};
-        });
+    : super((params) async {
+        await Future<void>.delayed(Duration.zero);
+        final p = params as Map<String, dynamic>;
+        final a = p['a'] as int;
+        final b = p['b'] as int;
+        return {'c': a + b};
+      });
 }
 
 class AsyncBatchAddNode extends AsyncBatchNode<List<int>, List<int>> {
   AsyncBatchAddNode()
-      : super((items) async {
-          await Future<void>.delayed(Duration.zero);
-          final a = items[0];
-          final b = items[1];
-          final c = <int>[];
-          for (var i = 0; i < a.length; i++) {
-            c.add(a[i] + b[i]);
-          }
-          return [c];
-        });
+    : super((items) async {
+        await Future<void>.delayed(Duration.zero);
+        final a = items[0];
+        final b = items[1];
+        final c = <int>[];
+        for (var i = 0; i < a.length; i++) {
+          c.add(a[i] + b[i]);
+        }
+        return [c];
+      });
 }
 
 void main() {
@@ -74,8 +74,10 @@ void main() {
       // Benchmarks are not part of the application, so printing to the console
       // is acceptable.
       // ignore: avoid_print
-      print('AsyncFlow benchmark: ${stopwatch.elapsedMilliseconds}ms for '
-          '$iterations iterations');
+      print(
+        'AsyncFlow benchmark: ${stopwatch.elapsedMilliseconds}ms for '
+        '$iterations iterations',
+      );
     });
 
     test('AsyncBatchNode Execution', () async {
@@ -130,8 +132,10 @@ void main() {
       // Benchmarks are not part of the application, so printing to the console
       // is acceptable.
       // ignore: avoid_print
-      print('AsyncBatchFlow benchmark: ${stopwatch.elapsedMilliseconds}ms for '
-          '$iterations iterations');
+      print(
+        'AsyncBatchFlow benchmark: ${stopwatch.elapsedMilliseconds}ms for '
+        '$iterations iterations',
+      );
     });
 
     test('AsyncParallelBatchFlow Orchestration', () async {
@@ -146,8 +150,7 @@ void main() {
             c.add(a[i] + b[i]);
           }
           return c;
-        })
-          ..name = 'add1',
+        })..name = 'add1',
         AsyncNode((params) async {
           final p = params as Map<String, dynamic>;
           final item = p['input'] as Map<String, List<int>>;
@@ -158,8 +161,7 @@ void main() {
             c.add(a[i] + b[i]);
           }
           return c;
-        })
-          ..name = 'add2',
+        })..name = 'add2',
       ]);
 
       final stopwatch = Stopwatch()..start();
@@ -183,8 +185,10 @@ void main() {
       // Benchmarks are not part of the application, so printing to the console
       // is acceptable.
       // ignore: avoid_print
-      print('AsyncParallelBatchFlow benchmark: '
-          '${stopwatch.elapsedMilliseconds}ms for $iterations iterations');
+      print(
+        'AsyncParallelBatchFlow benchmark: '
+        '${stopwatch.elapsedMilliseconds}ms for $iterations iterations',
+      );
     });
   });
 }

@@ -21,7 +21,6 @@ class BatchAddNode extends BatchNode<List<int>, List<int>> {
   }
 }
 
-
 void main() {
   group('Batch Processing Benchmark', () {
     test('BatchNode Execution', () async {
@@ -61,7 +60,7 @@ void main() {
 
       for (var i = 0; i < iterations; i++) {
         await flow.run({
-          'items': [data]
+          'items': [data],
         });
       }
 
