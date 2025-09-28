@@ -30,6 +30,12 @@ abstract class BaseNode {
 
   /// Defines the next node in the sequence.
   BaseNode next(BaseNode node, {String action = 'default'}) {
+    if (successors.containsKey(action)) {
+      print(
+        'Warning: Overwriting existing successor for action "$action" on node '
+        '"${name ?? runtimeType}".',
+      );
+    }
     successors[action] = node;
     return node;
   }
@@ -70,6 +76,13 @@ abstract class BaseNode {
 
   /// Executes the node's lifecycle (`prep` -> `exec` -> `post`).
   Future<dynamic> run(Map<String, dynamic> shared) async {
+    if (successors.isNotEmpty) {
+      print(
+        'Warning: Calling run() on a node with successors has no effect on '
+        'flow execution. To execute the entire flow, call run() on the Flow '
+        'instance instead.',
+      );
+    }
     final prepResult = await prep(shared);
     final execResult = await exec(prepResult);
     return post(shared, prepResult, execResult);
