@@ -5,8 +5,12 @@ void main() {
   group('AsyncParallelBatchFlow', () {
     test('should process a batch of inputs in parallel', () async {
       final flow = AsyncParallelBatchFlow<int, int>([
-        AsyncNode((int x) async => x * 2),
-        AsyncNode((int x) async => x * 3),
+        AsyncNode(
+          (dynamic r) async => (r as Map<String, dynamic>)['input'] * 2,
+        ),
+        AsyncNode(
+          (dynamic r) async => (r as Map<String, dynamic>)['input'] * 3,
+        ),
       ]);
 
       final result = await flow.call([1, 2, 3]);

@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:pocketflow/src/base_node.dart';
-import 'package:pocketflow/src/node.dart';
 
 /// A [Flow] is a specialized [BaseNode] that orchestrates the execution of a
 /// graph of nodes. It manages the flow of data and control between nodes.
