@@ -35,8 +35,8 @@ void main() {
       'clone() should create a new instance with the same exec function',
       () async {
         const expectedResult = 'cloned_result';
-      final originalNode = AsyncNode((_) async => expectedResult)
-        ..name = 'Original';
+        final originalNode = AsyncNode((_) async => expectedResult)
+          ..name = 'Original';
 
         final clonedNode = originalNode.clone();
 

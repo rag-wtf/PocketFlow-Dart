@@ -18,6 +18,11 @@ class AsyncNode extends Node {
   final AsyncExecFunction _execFunction;
 
   @override
+  Future<dynamic> prep(Map<String, dynamic> shared) async {
+    return shared;
+  }
+
+  @override
   Future<dynamic> exec(dynamic prepResult) {
     return _execFunction(prepResult);
   }

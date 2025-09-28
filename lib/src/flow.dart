@@ -93,9 +93,13 @@ class Flow extends BaseNode {
     return lastResult;
   }
 
-  @override
-  Flow clone() {
-    final clonedFlow = Flow();
+  /// Creates a deep copy of this [Flow].
+  ///
+  /// Subclasses can override this method to create a copy of the correct type,
+  /// but they should call `super.clone()` to ensure the base properties are
+  /// copied.
+  T copy<T extends Flow>([T Function()? factory]) {
+    final clonedFlow = (factory != null ? factory() : Flow()) as T;
     clonedFlow.name = name;
     clonedFlow.params = Map.from(params);
 
@@ -107,5 +111,10 @@ class Flow extends BaseNode {
     clonedFlow._start = _cloneNode(_start, clonedNodes) as Node?;
 
     return clonedFlow;
+  }
+
+  @override
+  Flow clone() {
+    return copy();
   }
 }
