@@ -11,16 +11,19 @@ class Flow extends BaseNode {
   /// flow.
   Flow({BaseNode? start}) : _start = start;
 
+  /// The starting node of the flow.
   BaseNode? _start;
 
-  /// Sets the starting [node] for the flow.
+  /// Sets the starting [node] for the flow. This is the entry point for the
+  /// execution of the flow.
   ///
-  /// Returns the [node] that was set as the start node.
+  /// Returns the [node] that was set as the start node, allowing for chaining.
   BaseNode start(BaseNode node) {
     _start = node;
     return node;
   }
 
+  /// Clones a node and its successors recursively.
   BaseNode? _cloneNode(
     BaseNode? originalNode,
     Map<BaseNode, BaseNode> clonedNodes, [
@@ -52,6 +55,15 @@ class Flow extends BaseNode {
   }
 
   @override
+  /// Executes the flow.
+  ///
+  /// This method clones the entire flow, including all nodes, to ensure that
+  /// each execution is isolated. It then traverses the graph, executing each
+  /// node in sequence.
+  ///
+  /// The [shared] map is passed to each node, allowing them to share data.
+  ///
+  /// Returns the result of the last executed node.
   Future<dynamic> run(Map<String, dynamic> shared) async {
     if (_start == null) {
       throw StateError('The start node has not been set.');
@@ -104,13 +116,14 @@ class Flow extends BaseNode {
 
     if (_start != null) {
       final clonedNodes = <BaseNode, BaseNode>{};
-      clonedFlow._start = _cloneNode(_start!, clonedNodes);
+      clonedFlow._start = _cloneNode(_start, clonedNodes);
     }
 
     return clonedFlow;
   }
 
   @override
+  /// Creates a deep copy of this [Flow].
   Flow clone() {
     return copy();
   }

@@ -6,10 +6,12 @@ void main() {
     test('should process a batch of inputs in parallel', () async {
       final flow = AsyncParallelBatchFlow<int, int>([
         AsyncNode(
-          (dynamic r) async => (r as Map<String, dynamic>)['input'] * 2,
+          (dynamic r) async =>
+              ((r as Map<String, dynamic>)['input'] as int) * 2,
         ),
         AsyncNode(
-          (dynamic r) async => (r as Map<String, dynamic>)['input'] * 3,
+          (dynamic r) async =>
+              ((r as Map<String, dynamic>)['input'] as int) * 3,
         ),
       ]);
 

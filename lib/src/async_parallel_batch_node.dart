@@ -15,10 +15,12 @@ typedef AsyncParallelBatchItemExecFunction<I, O> = Future<O> Function(I item);
 class AsyncParallelBatchNode<I, O> extends Node {
   /// Creates a new `AsyncParallelBatchNode`.
   ///
-  /// - [_execFunction]: The asynchronous function to be executed for each
+  /// - [execFunction]: The asynchronous function to be executed for each
   ///   item in the batch.
-  AsyncParallelBatchNode(this._execFunction);
+  AsyncParallelBatchNode(AsyncParallelBatchItemExecFunction<I, O> execFunction)
+    : _execFunction = execFunction;
 
+  /// The asynchronous function to be executed for each item in the batch.
   final AsyncParallelBatchItemExecFunction<I, O> _execFunction;
 
   /// A convenience method to execute the node directly with a list of items.
@@ -37,6 +39,13 @@ class AsyncParallelBatchNode<I, O> extends Node {
   }
 
   @override
+  /// Prepares the batch of items for processing.
+  ///
+  /// This method retrieves the list of items from the node's parameters. It
+  /// expects a parameter named "items" which should be a `List<I>`.
+  ///
+  /// Throws an [ArgumentError] if the "items" parameter is not provided or is
+  /// of the wrong type.
   Future<List<I>> prep(Map<String, dynamic> shared) async {
     final items = params['items'];
 
@@ -65,12 +74,18 @@ class AsyncParallelBatchNode<I, O> extends Node {
   }
 
   @override
+  /// Executes the batch processing in parallel.
+  ///
+  /// This method applies the [_execFunction] to each item in the [prepResult]
+  /// list and waits for all the resulting futures to complete using
+  /// `Future.wait`.
   Future<List<O>> exec(covariant List<I> prepResult) {
     final futures = prepResult.map(_execFunction).toList();
     return Future.wait(futures);
   }
 
   @override
+  /// Creates a copy of this [AsyncParallelBatchNode].
   AsyncParallelBatchNode<I, O> clone() {
     return AsyncParallelBatchNode<I, O>(_execFunction)
       ..name = name

@@ -11,23 +11,24 @@ class BatchFlow<I, O> extends Flow {
   /// Creates a new [BatchFlow] with a list of [nodes].
   ///
   /// The [nodes] are chained together in the order they are provided.
-  BatchFlow(this._nodes) {
-    if (_nodes.isEmpty) {
+  BatchFlow(List<Node> nodes) : _nodes = nodes {
+    if (nodes.isEmpty) {
       throw ArgumentError('The list of nodes cannot be empty.');
     }
 
     // Set the start node of the flow
-    start(_nodes.first);
+    start(nodes.first);
 
     // Chain the rest of the nodes sequentially
-    for (var i = 0; i < _nodes.length - 1; i++) {
-      _nodes[i].next(_nodes[i + 1]);
+    for (var i = 0; i < nodes.length - 1; i++) {
+      nodes[i].next(nodes[i + 1]);
     }
   }
 
   /// The list of nodes that make up the flow.
   final List<Node> _nodes;
 
+  @override
   /// Runs the flow for a batch of inputs.
   ///
   /// This method overrides the parent [Flow.run] method. It expects the
@@ -38,7 +39,6 @@ class BatchFlow<I, O> extends Flow {
   /// isolated, as the parent `run` method handles the cloning of nodes.
   ///
   /// Returns a list of outputs corresponding to each input.
-  @override
   Future<dynamic> run(Map<String, dynamic> shared) async {
     if (!shared.containsKey('items') || shared['items'] is! List) {
       throw ArgumentError(
@@ -58,6 +58,7 @@ class BatchFlow<I, O> extends Flow {
   }
 
   @override
+  /// Creates a deep copy of this [BatchFlow].
   BatchFlow<I, O> clone() {
     final clonedNodes = _nodes.map((node) => node.clone()).toList();
     return BatchFlow<I, O>(clonedNodes);

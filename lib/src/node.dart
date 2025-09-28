@@ -4,7 +4,7 @@ import 'package:pocketflow/src/base_node.dart';
 
 /// A class that represents a node in a PocketFlow workflow.
 ///
-/// A `Node` is an extension of `BaseNode` that adds retry logic to the `exec`
+/// A `Node` is an extension of [BaseNode] that adds retry logic to the `exec`
 /// method. This is useful for operations that might fail intermittently, such
 /// as network requests.
 class Node extends BaseNode {
@@ -13,20 +13,29 @@ class Node extends BaseNode {
   /// - [maxRetries]: The maximum number of times to retry the `exec` method.
   ///   Defaults to `1`.
   /// - [wait]: The duration to wait between retries. Defaults to
-  ///   `Duration.zero`.
+  ///   [Duration.zero].
   Node({
     this.maxRetries = 1,
     this.wait = Duration.zero,
   });
 
   /// The maximum number of times to retry the `exec` method upon failure.
+  /// A value of 1 means the `exec` method will be attempted once. A value of 2
+  /// means it will be attempted once, and if it fails, it will be retried once
+  /// more.
   final int maxRetries;
 
-  /// The duration to wait between retries.
+  /// The duration to wait between retries. If `maxRetries` is greater than 1,
+  /// this is the amount of time the node will pause before re-attempting the
+  /// `exec` method.
   final Duration wait;
 
   /// A fallback method that is called when the `exec` method fails after all
   /// retries have been exhausted.
+  ///
+  /// The [prepResult] is the result from the `prep` method, and the [error] is
+  /// the exception that was caught during the last attempt of the `exec`
+  /// method.
   ///
   /// The default implementation re-throws the error. This method can be
   /// overridden to provide custom fallback logic, such as returning a
@@ -39,9 +48,9 @@ class Node extends BaseNode {
   /// Executes the node's lifecycle (`prep` -> `exec` -> `post`) with retry
   /// logic.
   ///
-  /// If the `exec` method fails, it will be retried up to `maxRetries` times.
-  /// A `wait` duration can be specified to delay between retries. If all
-  /// retries fail, the `execFallback` method is called.
+  /// If the `exec` method fails, it will be retried up to [maxRetries] times.
+  /// A [wait] duration can be specified to delay between retries. If all
+  /// retries fail, the [execFallback] method is called.
   Future<dynamic> run(Map<String, dynamic> shared) async {
     final prepResult = await prep(shared);
     dynamic execResult;
@@ -73,13 +82,13 @@ class Node extends BaseNode {
   }
 
   @override
+  /// Creates a copy of the node.
   Node clone() {
-    final cloned = Node(
-      maxRetries: maxRetries,
-      wait: wait,
-    );
-    cloned.name = name;
-    cloned.params = Map.from(params);
-    return cloned;
+    return Node(
+        maxRetries: maxRetries,
+        wait: wait,
+      )
+      ..name = name
+      ..params = Map.from(params);
   }
 }

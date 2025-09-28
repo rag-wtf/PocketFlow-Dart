@@ -12,22 +12,30 @@ typedef AsyncExecFunction = Future<dynamic> Function(dynamic prepResult);
 class AsyncNode extends Node {
   /// Creates a new `AsyncNode`.
   ///
-  /// - [_execFunction]: The asynchronous function to be executed by this node.
-  AsyncNode(this._execFunction);
+  /// - [execFunction]: The asynchronous function to be executed by this node.
+  AsyncNode(AsyncExecFunction execFunction) : _execFunction = execFunction;
 
+  /// The asynchronous function to be executed by this node.
   final AsyncExecFunction _execFunction;
 
   @override
+  /// Prepares the data for the `exec` method.
+  ///
+  /// This implementation simply returns the [shared] map.
   Future<dynamic> prep(Map<String, dynamic> shared) async {
     return shared;
   }
 
   @override
+  /// Executes the asynchronous function.
+  ///
+  /// This method calls the [_execFunction] that was passed to the constructor.
   Future<dynamic> exec(dynamic prepResult) {
     return _execFunction(prepResult);
   }
 
   @override
+  /// Creates a copy of this [AsyncNode].
   AsyncNode clone() {
     return AsyncNode(_execFunction)
       ..name = name
