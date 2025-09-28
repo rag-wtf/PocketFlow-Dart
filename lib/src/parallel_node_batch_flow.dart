@@ -3,18 +3,19 @@ import 'dart:async';
 import 'package:pocketflow/src/async_flow.dart';
 import 'package:pocketflow/src/base_node.dart';
 
-/// A class for orchestrating parallel, asynchronous batch flows.
+/// A class for orchestrating parallel, asynchronous batch flows where nodes
+/// are executed in parallel for each item.
 ///
 /// This flow takes a list of items and a list of nodes. For each item, it
 /// executes all the nodes in parallel. This is useful for scenarios where you
 /// have a batch of items and want to perform multiple independent asynchronous
 /// operations on each item concurrently.
-class AsyncParallelBatchFlow<TIn, TOut> extends AsyncFlow {
-  /// Creates an instance of [AsyncParallelBatchFlow].
+class ParallelNodeBatchFlow<TIn, TOut> extends AsyncFlow {
+  /// Creates an instance of [ParallelNodeBatchFlow].
   ///
   /// The [nodes] parameter is a list of [BaseNode] instances that will be
   /// executed in parallel for each item in the batch.
-  AsyncParallelBatchFlow(List<BaseNode> nodes) : _nodes = nodes {
+  ParallelNodeBatchFlow(List<BaseNode> nodes) : _nodes = nodes {
     if (nodes.isEmpty) {
       throw ArgumentError('The list of nodes cannot be empty.');
     }
@@ -44,7 +45,7 @@ class AsyncParallelBatchFlow<TIn, TOut> extends AsyncFlow {
   Future<dynamic> run(Map<String, dynamic> shared) async {
     if (!shared.containsKey('input') || shared['input'] is! List) {
       throw ArgumentError(
-        'AsyncParallelBatchFlow requires a list of items under the key '
+        'ParallelNodeBatchFlow requires a list of items under the key '
         '"input" in the shared context. Use the call() method to provide the '
         'input list.',
       );
@@ -65,9 +66,9 @@ class AsyncParallelBatchFlow<TIn, TOut> extends AsyncFlow {
   }
 
   @override
-  /// Creates a deep copy of this [AsyncParallelBatchFlow].
-  AsyncParallelBatchFlow<TIn, TOut> clone() {
+  /// Creates a deep copy of this [ParallelNodeBatchFlow].
+  ParallelNodeBatchFlow<TIn, TOut> clone() {
     final clonedNodes = _nodes.map((node) => node.clone()).toList();
-    return AsyncParallelBatchFlow<TIn, TOut>(clonedNodes);
+    return ParallelNodeBatchFlow<TIn, TOut>(clonedNodes);
   }
 }
