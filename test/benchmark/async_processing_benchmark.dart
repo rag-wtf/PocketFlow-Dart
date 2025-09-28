@@ -111,8 +111,8 @@ void main() {
       );
     });
 
-    test('AsyncBatchFlow Orchestration', () async {
-      final flow = AsyncBatchFlow<List<int>, List<int>>([
+    test('StreamingBatchFlow Orchestration', () async {
+      final flow = StreamingBatchFlow<List<int>, List<int>>([
         AsyncBatchAddNode()..name = 'add1',
         AsyncBatchAddNode()..name = 'add2',
       ]);
@@ -125,7 +125,7 @@ void main() {
       const iterations = 1000;
 
       for (var i = 0; i < iterations; i++) {
-        await flow.run({});
+        await flow.run(<String, dynamic>{});
       }
 
       stopwatch.stop();
@@ -133,7 +133,7 @@ void main() {
       // is acceptable.
       // ignore: avoid_print
       print(
-        'AsyncBatchFlow benchmark: ${stopwatch.elapsedMilliseconds}ms for '
+        'StreamingBatchFlow benchmark: ${stopwatch.elapsedMilliseconds}ms for '
         '$iterations iterations',
       );
     });

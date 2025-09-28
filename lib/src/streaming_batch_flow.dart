@@ -8,12 +8,12 @@ import 'package:pocketflow/src/base_node.dart';
 /// This class extends [AsyncFlow] to provide a way to process a batch of items
 /// through a series of asynchronous nodes. The nodes are executed sequentially,
 /// and the output of one node becomes the input of the next.
-class AsyncBatchFlow<TIn, TOut> extends AsyncFlow {
-  /// Creates an instance of [AsyncBatchFlow].
+class StreamingBatchFlow<TIn, TOut> extends AsyncFlow {
+  /// Creates an instance of [StreamingBatchFlow].
   ///
   /// The [nodes] parameter is a list of [BaseNode] instances that make up the
   /// flow. The nodes are chained together in the order they are provided.
-  AsyncBatchFlow(List<BaseNode> nodes) {
+  StreamingBatchFlow(List<BaseNode> nodes) {
     if (nodes.isEmpty) {
       throw ArgumentError('The list of nodes cannot be empty.');
     }
@@ -38,7 +38,7 @@ class AsyncBatchFlow<TIn, TOut> extends AsyncFlow {
     // the 'items' parameter of the flow itself.
     if (!params.containsKey('items') || params['items'] is! List) {
       throw ArgumentError(
-        'AsyncBatchFlow requires a list of items under the key "items" in '
+        'StreamingBatchFlow requires a list of items under the key "items" in '
         'its params.',
       );
     }
