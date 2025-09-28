@@ -11,7 +11,7 @@ The goal of this project is to port the core runtime of PocketFlow from Python t
 - **Test-Driven Development (TDD)**: Tests MUST be written before the implementation. All new code must have corresponding tests, and all tests must pass before merging.
 - **Simplicity**: The implementation should be simple, clean, and easy to understand. Avoid over-engineering.
 - **No Dependencies**: The core library must not have any third-party dependencies from `pub.dev`.
-- **Follow the Plan**: Adhere to the tasks and designs laid out in the `specs/010-analysis` directory.
+- **Follow the Plan**: Adhere to the tasks and designs laid out in the `specs/011-gap-analysis` directory.
 
 ## 3. Tech Stack
 
@@ -40,7 +40,7 @@ The goal of this project is to port the core runtime of PocketFlow from Python t
 
 ## 5. Development Workflow
 
-Follow the tasks outlined in `specs/010-analysis/tasks.md` in the specified order.
+Follow the tasks outlined in `specs/011-gap-analysis/tasks.md` in the specified order.
 
 1.  **Setup**: Execute the `source setup.sh` command to setup the Dart environment.
 2.  **Create files/directories**: Create the necessary files and directories.
