@@ -1,5 +1,22 @@
 import 'dart:async';
 
+/// A helper class to represent a pending conditional transition.
+class ConditionalTransition {
+  /// Creates a new conditional transition.
+  ConditionalTransition(this.from, this.action);
+
+  /// The source node of the transition.
+  final BaseNode from;
+
+  /// The action that triggers the transition.
+  final String action;
+
+  /// Chains the transition to the [to] node.
+  BaseNode operator >>(BaseNode to) {
+    return from.next(to, action: action);
+  }
+}
+
 /// An abstract class representing a node in a workflow.
 abstract class BaseNode {
   /// The unique name of the node.
@@ -15,6 +32,20 @@ abstract class BaseNode {
   BaseNode next(BaseNode node, {String action = 'default'}) {
     successors[action] = node;
     return node;
+  }
+
+  /// Chains the current node to the [other] node.
+  ///
+  /// This is a shorthand for `next(other)`.
+  BaseNode operator >>(BaseNode other) {
+    return next(other);
+  }
+
+  /// Creates a conditional transition with the given [action].
+  ///
+  /// This is used with the `>>` operator to chain nodes conditionally.
+  ConditionalTransition operator -(String action) {
+    return ConditionalTransition(this, action);
   }
 
   /// Pre-processing logic before `exec`.
