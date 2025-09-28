@@ -11,6 +11,11 @@ class NumberNode extends Node {
   Future<void> prep(Map<String, dynamic> sharedStorage) async {
     sharedStorage['current'] = number;
   }
+
+  @override
+  Node clone() {
+    return NumberNode(number)..params = Map.from(params);
+  }
 }
 
 class AddNode extends Node {
@@ -21,6 +26,11 @@ class AddNode extends Node {
   Future<void> prep(Map<String, dynamic> sharedStorage) async {
     sharedStorage['current'] = (sharedStorage['current'] as int? ?? 0) + number;
   }
+
+  @override
+  Node clone() {
+    return AddNode(number)..params = Map.from(params);
+  }
 }
 
 class MultiplyNode extends Node {
@@ -30,6 +40,11 @@ class MultiplyNode extends Node {
   @override
   Future<void> prep(Map<String, dynamic> sharedStorage) async {
     sharedStorage['current'] = (sharedStorage['current'] as int? ?? 0) * number;
+  }
+
+  @override
+  Node clone() {
+    return MultiplyNode(number)..params = Map.from(params);
   }
 }
 
@@ -79,6 +94,19 @@ class FallibleNode extends Node {
   ) async {
     // Return the execResult so it can be asserted in tests.
     return execResult;
+  }
+
+  @override
+  Node clone() {
+    return FallibleNode(
+      failCount: failCount,
+      successValue: successValue,
+      fallbackValue: fallbackValue,
+      useCustomFallback: useCustomFallback,
+      rethrowNonException: rethrowNonException,
+      maxRetries: maxRetries,
+      wait: wait,
+    )..params = Map.from(params);
   }
 }
 
@@ -174,6 +202,30 @@ should rethrow the exception if retries are exhausted with default fallback''',
       );
       // Fallback should not be reached, so attempts should be 1
       expect(node.attempts, 1);
+    });
+  });
+
+  group('Node.clone()', () {
+    test('should create a new instance with a deep copy of params', () {
+      final original = Node(maxRetries: 3, wait: const Duration(seconds: 1));
+      original.params['key'] = 'value';
+
+      final cloned = original.clone();
+
+      // Should be a new instance
+      expect(identical(original, cloned), isFalse);
+
+      // Properties should be the same
+      expect(cloned.maxRetries, original.maxRetries);
+      expect(cloned.wait, original.wait);
+
+      // Params should be a copy, not a reference
+      expect(cloned.params, equals(original.params));
+      expect(identical(cloned.params, original.params), isFalse);
+
+      // Modifying the cloned params should not affect the original
+      cloned.params['key'] = 'newValue';
+      expect(original.params['key'], 'value');
     });
   });
 }

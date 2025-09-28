@@ -36,10 +36,20 @@ class MockNode extends BaseNode {
     receivedExecResult = execResult;
     return postResult;
   }
+
+  @override
+  BaseNode clone() {
+    return MockNode()..params = Map.from(params);
+  }
 }
 
 // A node that uses the default prep, exec, and post implementations.
-class DefaultNode extends BaseNode {}
+class DefaultNode extends BaseNode {
+  @override
+  BaseNode clone() {
+    return DefaultNode()..params = Map.from(params);
+  }
+}
 
 void main() {
   group('BaseNode', () {
@@ -126,5 +136,17 @@ void main() {
         expect(result, isNull);
       },
     );
+  });
+
+  group('BaseNode.clone()', () {
+    test('should create a new instance with the same properties', () {
+      final original = MockNode();
+      original.params['key'] = 'value';
+
+      final cloned = original.clone();
+
+      expect(cloned, isNot(same(original)));
+      expect(cloned.params, equals(original.params));
+    });
   });
 }

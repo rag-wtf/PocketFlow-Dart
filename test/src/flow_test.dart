@@ -11,6 +11,46 @@ class NumberNode extends Node {
   Future<void> prep(Map<String, dynamic> sharedStorage) async {
     sharedStorage['current'] = number;
   }
+
+  @override
+  Node clone() {
+    return NumberNode(number)
+      ..name = name
+      ..params = Map.from(params);
+  }
+}
+
+class ParameterNode extends Node {
+  @override
+  Future<void> prep(Map<String, dynamic> sharedStorage) async {
+    if (params.containsKey('value')) {
+      sharedStorage['output'] = params['value'];
+    }
+  }
+
+  @override
+  Node clone() {
+    return ParameterNode()
+      ..name = name
+      ..params = Map.from(params);
+  }
+}
+
+class StatefulNode extends Node {
+  int _counter = 0;
+
+  @override
+  Future<void> prep(Map<String, dynamic> sharedStorage) async {
+    _counter++;
+    sharedStorage['counter'] = _counter;
+  }
+
+  @override
+  Node clone() {
+    return StatefulNode()
+      ..name = name
+      ..params = Map.from(params);
+  }
 }
 
 class AddNode extends Node {
@@ -21,6 +61,13 @@ class AddNode extends Node {
   Future<void> prep(Map<String, dynamic> sharedStorage) async {
     sharedStorage['current'] = (sharedStorage['current'] as int? ?? 0) + number;
   }
+
+  @override
+  Node clone() {
+    return AddNode(number)
+      ..name = name
+      ..params = Map.from(params);
+  }
 }
 
 class MultiplyNode extends Node {
@@ -30,6 +77,13 @@ class MultiplyNode extends Node {
   @override
   Future<void> prep(Map<String, dynamic> sharedStorage) async {
     sharedStorage['current'] = (sharedStorage['current'] as int? ?? 0) * number;
+  }
+
+  @override
+  Node clone() {
+    return MultiplyNode(number)
+      ..name = name
+      ..params = Map.from(params);
   }
 }
 
@@ -46,6 +100,13 @@ class CheckPositiveNode extends Node {
       return 'negative';
     }
   }
+
+  @override
+  Node clone() {
+    return CheckPositiveNode()
+      ..name = name
+      ..params = Map.from(params);
+  }
 }
 
 class EndSignalNode extends Node {
@@ -59,6 +120,39 @@ class EndSignalNode extends Node {
     dynamic execResult,
   ) async {
     return signal;
+  }
+
+  @override
+  Node clone() {
+    return EndSignalNode(signal)
+      ..name = name
+      ..params = Map.from(params);
+  }
+}
+
+// A test node that increments a value and returns it.
+class _TestCloneNode extends Node {
+  @override
+  Future<dynamic> exec(dynamic prepResult) async {
+    params['value'] = (params['value'] as int) + 1;
+    return params;
+  }
+
+  @override
+  Future<dynamic> post(
+    Map<String, dynamic> shared,
+    dynamic prepResult,
+    dynamic execResult,
+  ) async {
+    // Return the value from the params so we can check it in tests.
+    return (execResult as Map<String, dynamic>)['value'];
+  }
+
+  @override
+  Node clone() {
+    return _TestCloneNode()
+      ..name = name
+      ..params = Map.from(params);
   }
 }
 
@@ -160,6 +254,59 @@ void main() {
 
       expect(sharedStorage['current'], -2);
       expect(lastAction, 'cycle_done');
+    });
+
+    test('should not persist state between runs', () async {
+      final pipeline = Flow()..start(StatefulNode());
+
+      // First run
+      await pipeline.run(sharedStorage);
+      expect(sharedStorage['counter'], 1);
+
+      // Second run
+      await pipeline.run(sharedStorage);
+      expect(sharedStorage['counter'], 1);
+    });
+
+    test('should pass parameters to nodes by name', () async {
+      final pipeline = Flow();
+      final paramNode = ParameterNode()..name = 'param_node';
+      pipeline.start(paramNode);
+
+      sharedStorage['__node_params__'] = {
+        'param_node': {'value': 123},
+      };
+
+      await pipeline.run(sharedStorage);
+
+      expect(sharedStorage['output'], 123);
+      expect(sharedStorage.containsKey('value'), isFalse);
+    });
+  });
+
+  group('Flow.clone()', () {
+    test('should create a deep copy of the graph', () async {
+      final nodeA = _TestCloneNode()..params['value'] = 1;
+      final nodeB = _TestCloneNode()..params['value'] = 10;
+      final nodeC = _TestCloneNode()..params['value'] = 100;
+
+      // Original flow is A -> B
+      final originalFlow = Flow();
+      originalFlow.start(nodeA).next(nodeB);
+
+      // Clone the flow
+      final clonedFlow = originalFlow.clone();
+
+      // Modify the original flow's graph to A -> C
+      nodeA.next(nodeC);
+
+      // Run the original flow. It should execute A -> C and return 101.
+      var result = await originalFlow.run({});
+      expect(result, 101);
+
+      // Run the cloned flow. It should still execute A -> B and return 11.
+      result = await clonedFlow.run({});
+      expect(result, 11);
     });
   });
 }

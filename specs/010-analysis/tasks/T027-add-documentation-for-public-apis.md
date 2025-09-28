@@ -11,4 +11,4 @@ Add documentation for all public APIs in the `lib/` directory. This will make th
 
 **Requirements**
 
-- [ ] Add Dartdoc comments to all public classes, methods, and properties.
+- [x] Add Dartdoc comments to all public classes, methods, and properties.
