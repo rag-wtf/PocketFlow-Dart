@@ -2,8 +2,8 @@ import 'package:pocketflow/pocketflow.dart';
 import 'package:test/test.dart';
 
 void main() {
-  group('AsyncBatchFlow', () {
-    late AsyncBatchFlow<int, int> flow;
+  group('StreamingBatchFlow', () {
+    late StreamingBatchFlow<int, int> flow;
     late AsyncBatchNode<int, int> node1;
     late AsyncBatchNode<int, int> node2;
     late Map<String, dynamic> sharedStorage;
@@ -21,7 +21,7 @@ void main() {
         return items.map((i) => i + 1).toList();
       });
 
-      flow = AsyncBatchFlow<int, int>([node1, node2]);
+      flow = StreamingBatchFlow<int, int>([node1, node2]);
       sharedStorage = {};
     });
 
