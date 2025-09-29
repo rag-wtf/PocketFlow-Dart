@@ -1,12 +1,11 @@
 import 'package:pocketflow/src/node.dart';
 
-/// An abstract class for processing a batch of items of type `I` by iterating
-/// over them and returning a batch of items of type `O`.
+/// An abstract node that processes a batch of items by iterating over them.
 ///
-/// This node is useful for performing the same asynchronous operation on each
-/// item in a list. The `prep` method extracts the list of items from the
-/// node's parameters, and the `run` method iterates over the list, calling
-/// `exec` for each item.
+/// `IteratingBatchNode` simplifies the process of applying an operation to each
+/// item in a collection. Subclasses must implement the `exec` method, which
+/// defines the logic for processing a single item. The node handles the
+/// iteration and result aggregation.
 abstract class IteratingBatchNode<I, O> extends Node {
   /// The main execution logic for processing a single item.
   ///

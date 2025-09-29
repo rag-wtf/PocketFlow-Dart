@@ -3,13 +3,13 @@ import 'dart:async';
 import 'package:pocketflow/src/async_flow.dart';
 import 'package:pocketflow/src/base_node.dart';
 
-/// A class for orchestrating parallel, asynchronous batch flows where nodes
-/// are executed in parallel for each item.
+/// A flow that processes a batch of items by executing a set of asynchronous
+/// nodes in parallel for each item.
 ///
-/// This flow takes a list of items and a list of nodes. For each item, it
-/// executes all the nodes in parallel. This is useful for scenarios where you
-/// have a batch of items and want to perform multiple independent asynchronous
-/// operations on each item concurrently.
+/// `AsyncParallelBatchFlow` is useful for scenarios where multiple independent
+/// asynchronous operations need to be performed on each item in a batch. For
+/// each item, the flow triggers all nodes concurrently and waits for them to
+/// complete.
 class AsyncParallelBatchFlow<TIn, TOut> extends AsyncFlow {
   /// Creates an instance of [AsyncParallelBatchFlow].
   ///

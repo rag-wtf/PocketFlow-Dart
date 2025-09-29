@@ -3,11 +3,13 @@ import 'dart:async';
 import 'package:pocketflow/src/async_flow.dart';
 import 'package:pocketflow/src/base_node.dart';
 
-/// A class for orchestrating asynchronous batch flows.
+/// A flow that processes a batch of items sequentially through a series of
+/// asynchronous nodes.
 ///
-/// This class extends [AsyncFlow] to provide a way to process a batch of items
-/// through a series of asynchronous nodes. The nodes are executed sequentially,
-/// and the output of one node becomes the input of the next.
+/// `AsyncBatchFlow` is designed for scenarios where a collection of items needs
+/// to be processed in a pipeline fashion. Each node in the flow receives the
+/// batch of items, performs an asynchronous operation, and passes the modified
+/// batch to the next node.
 class AsyncBatchFlow<TIn, TOut> extends AsyncFlow {
   /// Creates an instance of [AsyncBatchFlow].
   ///
