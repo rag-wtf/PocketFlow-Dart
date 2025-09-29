@@ -103,6 +103,15 @@ void main() {
         reason: 'run should return the result from post',
       );
     });
+
+    test('run should execute run and return the result', () async {
+      node.postResult = 'call_result';
+      final result = await node.run(sharedStorage);
+      expect(result, equals('call_result'));
+      expect(node.prepCalled, isTrue);
+      expect(node.execCalled, isTrue);
+      expect(node.postCalled, isTrue);
+    });
   });
 
   group('BaseNode default implementations', () {

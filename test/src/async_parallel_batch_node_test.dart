@@ -94,7 +94,7 @@ void main() {
                 (e) => e.message,
                 'message',
                 'The "items" parameter must be a List where all elements are '
-                'of type int.',
+                    'of type int.',
               ),
             ),
           );

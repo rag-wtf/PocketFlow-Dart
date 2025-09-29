@@ -89,5 +89,62 @@ void main() {
         );
       },
     );
+
+    test('run should handle an empty list of items', () async {
+      final items = <int>[];
+      node.params['items'] = items;
+
+      final result = await node.run(sharedStorage);
+
+      expect(result, isEmpty, reason: 'Should return an empty list');
+      expect(
+        node.execCalled,
+        isFalse,
+        reason: 'exec should not be called for an empty list',
+      );
+    });
+
+    test('clone should create a new instance with the same properties', () {
+      node
+        ..name = 'TestIteratingNode'
+        ..params['value'] = 123;
+
+      final clonedNode = node.clone() as MockIteratingBatchNode;
+
+      expect(clonedNode, isA<MockIteratingBatchNode>());
+      expect(clonedNode.name, equals('TestIteratingNode'));
+      expect(clonedNode.params['value'], equals(123));
+      expect(clonedNode, isNot(same(node)));
+    });
+
+    test('run should execute the node and return the result', () async {
+      final items = [5, 10];
+      node.params['items'] = items;
+
+      final result = await node.run(sharedStorage);
+
+      expect(result, equals([10, 20]));
+      expect(node.execCalled, isTrue);
+    });
+
+    test('should retrieve items from shared storage if not available in '
+        'params', () async {
+      final items = [4, 5, 6];
+      sharedStorage['items'] = items; // Items are in shared storage
+
+      final result = await node.run(sharedStorage);
+
+      expect(result, equals([8, 10, 12]));
+      expect(node.receivedItems, equals(items));
+    });
+
+    test(
+      'prep should handle a List<dynamic> with correct item types',
+      () async {
+        node.params['items'] = <dynamic>[1, 2, 3];
+        final result = await node.run(sharedStorage);
+        expect(result, equals([2, 4, 6]));
+      },
+    );
   });
 }

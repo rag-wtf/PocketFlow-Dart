@@ -66,8 +66,8 @@ void main() {
               (e) => e.message,
               'message',
               'ParallelNodeBatchFlow requires a list of items under the key '
-              '"input" in the shared context. Use the call() method to '
-              'provide the input list.',
+                  '"input" in the shared context. Use the call() method to '
+                  'provide the input list.',
             ),
           ),
         );
@@ -84,8 +84,8 @@ void main() {
               (e) => e.message,
               'message',
               'ParallelNodeBatchFlow requires a list of items under the key '
-              '"input" in the shared context. Use the call() method to '
-              'provide the input list.',
+                  '"input" in the shared context. Use the call() method to '
+                  'provide the input list.',
             ),
           ),
         );
@@ -95,8 +95,9 @@ void main() {
     group('clone', () {
       test('should create a deep copy of the flow', () async {
         final originalNode = _MutableNode(2);
-        final originalFlow =
-            ParallelNodeBatchFlow<int, dynamic>([originalNode]);
+        final originalFlow = ParallelNodeBatchFlow<int, dynamic>([
+          originalNode,
+        ]);
 
         // Clone the flow. It should have a new node with factor = 2.
         final clonedFlow = originalFlow.clone();

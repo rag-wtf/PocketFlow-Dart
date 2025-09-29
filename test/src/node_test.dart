@@ -132,6 +132,32 @@ void main() {
       await node.run(storage);
       expect(storage['current'], 15);
     });
+
+    test(
+      'AddNode should start from 0 if "current" is not in storage',
+      () async {
+        final node = AddNode(10);
+        final storage = <String, dynamic>{}; // 'current' is missing
+        await node.run(storage);
+        expect(storage['current'], 10);
+      },
+    );
+
+    test(
+      'MultiplyNode should start from 0 if "current" is not in storage',
+      () async {
+        final node = MultiplyNode(3);
+        final storage = <String, dynamic>{}; // 'current' is missing
+        await node.run(storage);
+        expect(storage['current'], 0);
+      },
+    );
+
+    test('default exec implementation should return null', () async {
+      final node = Node();
+      final result = await node.exec(null);
+      expect(result, isNull);
+    });
   });
 
   group('Node retry and fallback', () {

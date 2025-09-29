@@ -25,7 +25,7 @@ abstract class IteratingBatchNode<I, O> extends Node {
   /// Throws an [ArgumentError] if the "items" parameter is not provided or is
   /// of the wrong type.
   Future<List<I>> prep(Map<String, dynamic> shared) async {
-    final items = params['items'];
+    final items = params['items'] ?? shared['items'];
 
     if (items == null) {
       throw ArgumentError('The "items" parameter must be provided.');

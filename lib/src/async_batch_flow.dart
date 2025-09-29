@@ -15,7 +15,7 @@ class AsyncBatchFlow<TIn, TOut> extends AsyncFlow {
   ///
   /// The [nodes] parameter is a list of [BaseNode] instances that make up the
   /// flow. The nodes are chained together in the order they are provided.
-  AsyncBatchFlow(List<BaseNode> nodes) {
+  AsyncBatchFlow(this.nodes) {
     if (nodes.isEmpty) {
       throw ArgumentError('The list of nodes cannot be empty.');
     }
@@ -25,6 +25,9 @@ class AsyncBatchFlow<TIn, TOut> extends AsyncFlow {
       nodes[i].next(nodes[i + 1]);
     }
   }
+
+  /// The list of nodes in the flow.
+  final List<BaseNode> nodes;
 
   @override
   /// Executes the asynchronous batch flow.
@@ -54,5 +57,13 @@ class AsyncBatchFlow<TIn, TOut> extends AsyncFlow {
     // The `super.run()` method executes the flow of nodes. Each node will
     // read and write to the `initialShared` map.
     return super.run(initialShared);
+  }
+
+  @override
+  AsyncBatchFlow<TIn, TOut> clone() {
+    final clonedNodes = nodes.map((node) => node.clone()).toList();
+    return AsyncBatchFlow<TIn, TOut>(clonedNodes)
+      ..name = name
+      ..params = Map.from(params);
   }
 }

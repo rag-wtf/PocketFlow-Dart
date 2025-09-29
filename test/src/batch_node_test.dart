@@ -107,13 +107,47 @@ void main() {
                 (e) => e.message,
                 'message',
                 'The "items" parameter must be a List where all elements are '
-                'of type int.',
+                    'of type int.',
               ),
             ),
             reason: 'Should throw ArgumentError for incorrect list type',
           );
         },
       );
+    });
+
+    test('clone should create a new instance with the same properties', () {
+      node
+        ..name = 'TestNode'
+        ..params['value'] = 42;
+
+      final clonedNode = node.clone() as MockBatchNode;
+
+      expect(clonedNode, isA<MockBatchNode>());
+      expect(clonedNode.name, equals('TestNode'));
+      expect(clonedNode.params['value'], equals(42));
+      expect(clonedNode, isNot(same(node)));
+    });
+
+    test('run should execute the node and return the result', () async {
+      final items = [10, 20];
+      node.params['items'] = items;
+
+      final result = await node.run(sharedStorage);
+
+      expect(result, equals([20, 40]));
+      expect(node.execCalled, isTrue);
+    });
+
+    test('should retrieve items from shared storage if not available in '
+        'params', () async {
+      final items = [4, 5, 6];
+      sharedStorage['items'] = items; // Items are in shared storage
+
+      final result = await node.run(sharedStorage);
+
+      expect(result, equals([8, 10, 12]));
+      expect(node.receivedItems, equals(items));
     });
   });
 }

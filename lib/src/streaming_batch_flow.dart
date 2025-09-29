@@ -18,15 +18,26 @@ class StreamingBatchFlow<TIn, TOut> extends AsyncFlow {
   ///
   /// The [nodes] parameter is a list of [BaseNode] instances that make up the
   /// flow. The nodes are chained together in the order they are provided.
-  StreamingBatchFlow(List<BaseNode> nodes) {
+  StreamingBatchFlow(this.nodes) {
     if (nodes.isEmpty) {
-      throw ArgumentError('The list of nodes cannot be empty.');
+      throw StateError('The list of nodes cannot be empty.');
     }
 
     start(nodes.first);
     for (var i = 0; i < nodes.length - 1; i++) {
       nodes[i].next(nodes[i + 1]);
     }
+  }
+
+  /// The list of nodes in the flow.
+  final List<BaseNode> nodes;
+
+  @override
+  StreamingBatchFlow<TIn, TOut> clone() {
+    final clonedNodes = nodes.map((node) => node.clone()).toList();
+    return StreamingBatchFlow<TIn, TOut>(clonedNodes)
+      ..name = name
+      ..params = Map.from(params);
   }
 
   @override
