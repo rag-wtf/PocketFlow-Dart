@@ -1,13 +1,13 @@
-import 'package:test/test.dart';
 import 'package:pocketflow/pocketflow.dart';
+import 'package:test/test.dart';
 
 class FailNTimesNode extends Node {
-  int failsRemaining;
   FailNTimesNode(
     this.failsRemaining, {
-    int maxRetries = 3,
-    Duration wait = Duration.zero,
-  }) : super(maxRetries: maxRetries, wait: wait);
+    super.maxRetries = 3,
+    super.wait,
+  });
+  int failsRemaining;
 
   @override
   Future<dynamic> exec(dynamic prepResult) async {
@@ -32,7 +32,6 @@ void main() {
   test('Node should retry and eventually succeed', () async {
     final node = FailNTimesNode(
       2,
-      maxRetries: 3,
     ); // Fail 2 times, succeed on 3rd
     final shared = <String, dynamic>{};
 

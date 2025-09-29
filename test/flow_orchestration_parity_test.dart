@@ -1,10 +1,10 @@
-import 'package:test/test.dart';
 import 'package:pocketflow/pocketflow.dart';
+import 'package:test/test.dart';
 
 class TraceNode extends Node {
+  TraceNode(this.id, this.actionToReturn);
   final String id;
   final dynamic actionToReturn;
-  TraceNode(this.id, this.actionToReturn);
 
   @override
   Future<dynamic> exec(dynamic prepResult) async {

@@ -1,9 +1,9 @@
-import 'package:test/test.dart';
 import 'package:pocketflow/pocketflow.dart';
+import 'package:test/test.dart';
 
 class SyncRecorder extends Node {
-  final String id;
   SyncRecorder(this.id);
+  final String id;
 
   @override
   Future<dynamic> exec(dynamic prepResult) async {
@@ -15,8 +15,8 @@ class SyncRecorder extends Node {
 }
 
 class AsyncRecorder extends AsyncNode {
-  final String id;
   AsyncRecorder(this.id);
+  final String id;
 
   @override
   Future<dynamic> execAsync(dynamic prepResult) async {

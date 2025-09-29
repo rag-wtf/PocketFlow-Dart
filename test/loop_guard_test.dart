@@ -1,5 +1,5 @@
-import 'package:test/test.dart';
 import 'package:pocketflow/pocketflow.dart';
+import 'package:test/test.dart';
 
 class LoopingNode extends Node {
   LoopingNode();
@@ -53,7 +53,7 @@ void main() {
 
       // Should throw StateError when maxSteps exceeded
       expect(
-        () async => await flow.orch(<String, dynamic>{}, null, 5),
+        () async => flow.orch(<String, dynamic>{}, null, 5),
         throwsA(
           isA<StateError>().having(
             (e) => e.message,
