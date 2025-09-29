@@ -13,6 +13,7 @@ abstract class BatchNode<I, O> extends Node {
   /// specific processing logic for the batch. The [items] parameter is a list
   /// of items to be processed, and the method should return a list of processed
   /// items.
+  // coverage:ignore-line
   @override
   Future<List<O>> exec(covariant List<I> items);
 
