@@ -11,6 +11,7 @@ export 'src/base_node.dart';
 export 'src/batch_flow.dart';
 export 'src/batch_node.dart';
 export 'src/flow.dart';
+export 'src/iterating_batch_node.dart';
 export 'src/node.dart';
 export 'src/parallel_node_batch_flow.dart';
 export 'src/streaming_batch_flow.dart';
