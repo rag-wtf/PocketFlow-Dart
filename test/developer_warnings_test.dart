@@ -4,7 +4,7 @@ import 'package:test/test.dart';
 
 class TestNode extends BaseNode {
   @override
-  BaseNode clone() {
+  BaseNode createInstance() {
     return TestNode();
   }
 }

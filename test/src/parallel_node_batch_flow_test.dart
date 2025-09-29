@@ -12,7 +12,7 @@ class _MutableNode extends BaseNode {
   }
 
   @override
-  BaseNode clone() {
+  BaseNode createInstance() {
     return _MutableNode(factor);
   }
 }

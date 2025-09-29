@@ -10,10 +10,13 @@ class AddNode extends Node {
   }
 
   @override
-  Node clone() {
-    return AddNode()
-      ..name = name
-      ..params = Map.from(params);
+  BaseNode createInstance() {
+    return AddNode();
+  }
+
+  @override
+  AddNode clone() {
+    return super.clone() as AddNode;
   }
 }
 

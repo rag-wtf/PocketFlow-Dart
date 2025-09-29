@@ -27,10 +27,13 @@ class _AsyncTestCloneNode extends Node {
   }
 
   @override
-  Node clone() {
-    return _AsyncTestCloneNode()
-      ..name = name
-      ..params = Map.from(params);
+  BaseNode createInstance() {
+    return _AsyncTestCloneNode();
+  }
+
+  @override
+  _AsyncTestCloneNode clone() {
+    return super.clone() as _AsyncTestCloneNode;
   }
 }
 

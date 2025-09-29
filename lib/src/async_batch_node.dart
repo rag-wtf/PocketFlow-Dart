@@ -1,3 +1,4 @@
+import 'package:pocketflow/src/base_node.dart';
 import 'package:pocketflow/src/node.dart';
 
 /// A function type for an asynchronous batch execution block.
@@ -64,11 +65,15 @@ class AsyncBatchNode<I, O> extends Node {
   }
 
   @override
+  /// Creates a new instance of AsyncBatchNode with the same function.
+  BaseNode createInstance() {
+    return AsyncBatchNode<I, O>(_execFunction);
+  }
+
+  @override
   /// Creates a copy of this [AsyncBatchNode].
   AsyncBatchNode<I, O> clone() {
-    return AsyncBatchNode<I, O>(_execFunction)
-      ..name = name
-      ..params = Map.from(params);
+    return super.clone() as AsyncBatchNode<I, O>;
   }
 
   @override

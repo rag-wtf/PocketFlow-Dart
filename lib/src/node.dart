@@ -82,13 +82,22 @@ class Node extends BaseNode {
   }
 
   @override
-  /// Creates a copy of the node.
-  Node clone() {
+  /// Creates a new instance of Node with the same constructor parameters.
+  ///
+  /// This factory method is used by the base clone() method to create
+  /// a new instance of the correct type.
+  BaseNode createInstance() {
     return Node(
-        maxRetries: maxRetries,
-        wait: wait,
-      )
-      ..name = name
-      ..params = Map.from(params);
+      maxRetries: maxRetries,
+      wait: wait,
+    );
+  }
+
+  @override
+  /// Creates a copy of the node.
+  ///
+  /// Returns a Node instance with the same properties as the original.
+  Node clone() {
+    return super.clone() as Node;
   }
 }

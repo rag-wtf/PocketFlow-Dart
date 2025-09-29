@@ -26,8 +26,13 @@ class MultiplyNode extends Node {
   }
 
   @override
-  Node clone() {
-    return MultiplyNode(factor)..params = Map.from(params);
+  BaseNode createInstance() {
+    return MultiplyNode(factor);
+  }
+
+  @override
+  MultiplyNode clone() {
+    return super.clone() as MultiplyNode;
   }
 }
 

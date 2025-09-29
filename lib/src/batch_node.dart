@@ -1,4 +1,5 @@
 import 'package:pocketflow/src/async_node.dart';
+import 'package:pocketflow/src/base_node.dart';
 import 'package:pocketflow/src/node.dart';
 
 /// A concrete class for processing a batch of items of type `I` and returning
@@ -83,15 +84,18 @@ class BatchNode<I, O> extends Node {
   }
 
   @override
+  /// Creates a new instance of BatchNode with the same type parameters.
+  BaseNode createInstance() {
+    return BatchNode<I, O>();
+  }
+
+  @override
   /// Creates a copy of this [BatchNode].
   ///
-  /// This default implementation creates a new BatchNode with the same
-  /// name and parameters. Subclasses can override this method to provide
-  /// custom cloning logic.
+  /// This implementation uses the factory pattern to create a new instance
+  /// with the same properties.
   BatchNode<I, O> clone() {
-    return BatchNode<I, O>()
-      ..name = name
-      ..params = Map.from(params);
+    return super.clone() as BatchNode<I, O>;
   }
 }
 
@@ -197,9 +201,17 @@ class InheritanceAsyncBatchNode<I, O> extends AsyncNode {
   }
 
   @override
+  /// Creates a new instance of InheritanceAsyncBatchNode with the same
+  /// parameters.
+  BaseNode createInstance() {
+    return InheritanceAsyncBatchNode<I, O>(
+      maxRetries: maxRetries,
+      wait: wait,
+    );
+  }
+
+  @override
   InheritanceAsyncBatchNode<I, O> clone() {
-    return InheritanceAsyncBatchNode<I, O>(maxRetries: maxRetries, wait: wait)
-      ..name = name
-      ..params = Map<String, dynamic>.from(params);
+    return super.clone() as InheritanceAsyncBatchNode<I, O>;
   }
 }

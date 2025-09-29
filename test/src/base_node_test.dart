@@ -38,16 +38,16 @@ class MockNode extends BaseNode {
   }
 
   @override
-  BaseNode clone() {
-    return MockNode()..params = Map.from(params);
+  BaseNode createInstance() {
+    return MockNode();
   }
 }
 
 // A node that uses the default prep, exec, and post implementations.
 class DefaultNode extends BaseNode {
   @override
-  BaseNode clone() {
-    return DefaultNode()..params = Map.from(params);
+  BaseNode createInstance() {
+    return DefaultNode();
   }
 }
 

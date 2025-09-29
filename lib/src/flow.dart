@@ -213,6 +213,12 @@ class Flow extends BaseNode {
   }
 
   @override
+  /// Creates a new instance of Flow.
+  BaseNode createInstance() {
+    return Flow();
+  }
+
+  @override
   /// Creates a deep copy of this [Flow].
   Flow clone() {
     return copy();

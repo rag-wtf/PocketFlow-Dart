@@ -1,3 +1,4 @@
+import 'package:pocketflow/src/base_node.dart';
 import 'package:pocketflow/src/node.dart';
 
 /// A function type for an asynchronous execution block.
@@ -131,14 +132,18 @@ class AsyncNode extends Node {
   }
 
   @override
+  /// Creates a new instance of AsyncNode with the same constructor parameters.
+  BaseNode createInstance() {
+    return AsyncNode(
+      maxRetries: maxRetries,
+      wait: wait,
+    );
+  }
+
+  @override
   /// Creates a copy of this [AsyncNode].
   AsyncNode clone() {
-    return AsyncNode(
-        maxRetries: maxRetries,
-        wait: wait,
-      )
-      ..name = name
-      ..params = Map.from(params);
+    return super.clone() as AsyncNode;
   }
 }
 
@@ -174,10 +179,14 @@ class SimpleAsyncNode extends AsyncNode {
   }
 
   @override
+  /// Creates a new instance of SimpleAsyncNode with the same function.
+  BaseNode createInstance() {
+    return SimpleAsyncNode(_execFunction);
+  }
+
+  @override
   /// Creates a copy of this [SimpleAsyncNode].
   SimpleAsyncNode clone() {
-    return SimpleAsyncNode(_execFunction)
-      ..name = name
-      ..params = Map.from(params);
+    return super.clone() as SimpleAsyncNode;
   }
 }

@@ -1,3 +1,4 @@
+import 'package:pocketflow/src/base_node.dart';
 import 'package:pocketflow/src/batch_node.dart';
 import 'package:test/test.dart';
 
@@ -14,10 +15,13 @@ class MultiplyAsyncBatchNode extends InheritanceAsyncBatchNode<int, int> {
   }
 
   @override
+  BaseNode createInstance() {
+    return MultiplyAsyncBatchNode(factor);
+  }
+
+  @override
   MultiplyAsyncBatchNode clone() {
-    return MultiplyAsyncBatchNode(factor)
-      ..name = name
-      ..params = Map<String, dynamic>.from(params);
+    return super.clone() as MultiplyAsyncBatchNode;
   }
 }
 
