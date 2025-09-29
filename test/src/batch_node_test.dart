@@ -51,40 +51,69 @@ void main() {
     });
 
     test(
-      'run should throw ArgumentError if "items" parameter is missing',
+      'prep should handle a List<dynamic> with correct item types',
       () async {
-        // Intentionally not setting the 'items' parameter
-        expect(
-          () => node.run(sharedStorage),
-          throwsArgumentError,
-          reason: 'Should throw ArgumentError when items are null',
-        );
+        node.params['items'] = <dynamic>[1, 2, 3];
+        final result = await node.run(sharedStorage);
+        expect(result, equals([2, 4, 6]));
       },
     );
 
-    test(
-      'run should throw ArgumentError if "items" is not a List of the '
-      'correct type',
-      () async {
-        node.params['items'] = ['a', 'b', 'c']; // Invalid type
-        expect(
-          () => node.run(sharedStorage),
-          throwsArgumentError,
-          reason: 'Should throw ArgumentError for incorrect list type',
-        );
-      },
-    );
+    group('prep validation', () {
+      test(
+        'should throw ArgumentError if "items" parameter is missing',
+        () {
+          // Intentionally not setting the 'items' parameter
+          expect(
+            () => node.run(sharedStorage),
+            throwsA(
+              isA<ArgumentError>().having(
+                (e) => e.message,
+                'message',
+                'The "items" parameter must be provided.',
+              ),
+            ),
+            reason: 'Should throw ArgumentError when items are null',
+          );
+        },
+      );
 
-    test(
-      'run should throw ArgumentError if "items" parameter is not a List',
-      () async {
-        node.params['items'] = 123; // Invalid type
-        expect(
-          () => node.run(sharedStorage),
-          throwsArgumentError,
-          reason: 'Should throw ArgumentError when items is not a list',
-        );
-      },
-    );
+      test(
+        'should throw ArgumentError if "items" is not a List',
+        () {
+          node.params['items'] = 123; // Invalid type
+          expect(
+            () => node.run(sharedStorage),
+            throwsA(
+              isA<ArgumentError>().having(
+                (e) => e.message,
+                'message',
+                'The "items" parameter must be a List, but got int.',
+              ),
+            ),
+            reason: 'Should throw ArgumentError when items is not a list',
+          );
+        },
+      );
+
+      test(
+        'should throw ArgumentError if "items" has incorrect item types',
+        () {
+          node.params['items'] = ['a', 'b', 'c']; // Invalid type
+          expect(
+            () => node.run(sharedStorage),
+            throwsA(
+              isA<ArgumentError>().having(
+                (e) => e.message,
+                'message',
+                'The "items" parameter must be a List where all elements are '
+                'of type int.',
+              ),
+            ),
+            reason: 'Should throw ArgumentError for incorrect list type',
+          );
+        },
+      );
+    });
   });
 }
