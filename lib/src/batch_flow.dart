@@ -54,21 +54,30 @@ class BatchFlow<I, O> extends Flow {
   @override
   /// Runs the flow for a batch of inputs.
   ///
-  /// This method follows Python's BatchFlow pattern:
+  /// This method follows Python's BatchFlow orchestration pattern but
+  /// adapts it for Dart's design where BatchFlow returns collected results:
   /// 1. Calls prep(shared) to get batch parameters
-  /// 2. For each batch parameter, executes the flow with merged parameters
-  /// 3. Returns post(shared, prep_result, null)
+  /// 2. For each batch parameter, calls orch with merged shared context
+  /// 3. Collects results and returns them via post()
   ///
-  /// Since Dart Flow doesn't have _orch method yet, we use super.run()
-  /// for each batch item until Phase 3 implements proper orchestration.
+  /// Orchestration matches Python's implementation:
+  /// ```python
+  /// def _run(self,shared):
+  ///     pr=self.prep(shared) or []
+  ///     for bp in pr: self._orch(shared,{**self.params,**bp})
+  ///     return self.post(shared,pr,None)
+  /// ```
   Future<dynamic> run(Map<String, dynamic> shared) async {
     final prepResult = await prep(shared);
     final outputs = <dynamic>[];
 
     for (final batchParams in prepResult) {
-      // Create a new shared context for this batch item
-      final itemShared = <String, dynamic>{...shared, ...batchParams};
-      final result = await super.run(itemShared);
+      // Create a new shared context with batch parameters merged in
+      final batchShared = <String, dynamic>{...shared, ...batchParams};
+
+      // Merge flow params with batch params for node parameters
+      final mergedParams = <String, dynamic>{...params, ...batchParams};
+      final result = await orch(batchShared, mergedParams);
       outputs.add(result);
     }
 
