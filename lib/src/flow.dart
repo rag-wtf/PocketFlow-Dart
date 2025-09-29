@@ -25,35 +25,34 @@ class Flow extends BaseNode {
 
   /// Gets the next node based on the current node and action.
   ///
-  /// This method implements the original Dart Flow transition logic
-  /// while supporting Python's action-based pattern.
+  /// This method implements Python's action-based transition logic.
   ///
   /// Logic:
-  /// 1. If action is a String and there's a successor for it, use that
-  /// 2. Otherwise, fall back to 'default' successor
-  /// 3. If no successor found, return null (flow ends)
+  /// 1. If [action] is a String, it looks for a successor with that key.
+  /// 2. If [action] is not a String (e.g., null), it looks for 'default'.
+  /// 3. If no successor is found for the determined key, the flow ends.
   BaseNode? getNextNode(BaseNode curr, dynamic action) {
     BaseNode? next;
+    // Determine the key to look for in the successors map.
+    // If action is a string, use it. Otherwise, use 'default'.
+    final actionToFind = (action is String) ? action : 'default';
 
-    // First try exact string match (original Dart logic)
-    if (action is String && curr.successors.containsKey(action)) {
-      next = curr.successors[action];
-    }
-    // Fall back to 'default' (original Dart logic)
-    else if (curr.successors.containsKey('default')) {
-      next = curr.successors['default'];
-    }
-    // No successor found - flow ends
-    else {
-      next = null;
+    if (curr.successors.containsKey(actionToFind)) {
+      next = curr.successors[actionToFind];
+    } else {
+      next = null; // No successor found for the action.
     }
 
-    // Log warning if flow ends unexpectedly (Python pattern)
+    // Log a warning if the flow terminates but other paths were available.
+    // This is useful for debugging and mirrors Python's behavior.
     if (next == null && curr.successors.isNotEmpty) {
-      curr.log(
-        "Warning: Flow ends: '$action' not found in "
-        '${curr.successors.keys.toList()}',
-      );
+      // We only log if the specific action we were looking for was not found.
+      if (!curr.successors.containsKey(actionToFind)) {
+        curr.log(
+          "Warning: Flow ends: '$action' not found in "
+          '${curr.successors.keys.toList()}',
+        );
+      }
     }
 
     return next;

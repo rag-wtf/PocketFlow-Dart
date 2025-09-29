@@ -20,9 +20,18 @@ class EchoNode extends Node {
 }
 
 void main() {
-  test('AsyncParallelBatchFlow returns list-of-results and is documented', () async {
-    final flow = AsyncParallelBatchFlow([EchoNode()]);
-    final res = await flow.call([{'x': 1}, {'x': 2}]);
-    expect(res, isA<List>()); // the result is a list of results per item
-  });
+  test(
+    'AsyncParallelBatchFlow returns list-of-results and is documented',
+    () async {
+      final flow = AsyncParallelBatchFlow<Map<String, int>>([EchoNode()]);
+      final res = await flow.call([
+        {'x': 1},
+        {'x': 2},
+      ]);
+      expect(
+        res,
+        isA<List<dynamic>>(),
+      ); // the result is a list of results per item
+    },
+  );
 }

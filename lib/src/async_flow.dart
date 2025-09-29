@@ -16,6 +16,12 @@ import 'package:pocketflow/src/flow.dart';
 /// - Handles both sync and async nodes in the flow graph
 /// - Follows Python's _run_async pattern
 class AsyncFlow extends Flow {
+  /// Creates a new [AsyncFlow].
+  ///
+  /// An optional [start] node can be provided to set the entry point of the
+  /// flow.
+  AsyncFlow({super.start});
+
   // AsyncNode lifecycle methods
 
   /// Async pre-processing logic before orchAsync.

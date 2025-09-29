@@ -55,11 +55,11 @@ void main() {
 
         // Set up flow: start -> (go_right) -> rightNode
         //                  -> (go_left) -> leftNode
-        startNode..next(leftNode, action: 'go_left')
-        ..next(rightNode, action: 'go_right');
+        startNode
+          ..next(leftNode, action: 'go_left')
+          ..next(rightNode, action: 'go_right');
 
-        final flow = Flow()
-        ..start(startNode);
+        final flow = Flow()..start(startNode);
 
         // Execute flow
         final result = await flow.run({});
@@ -77,14 +77,15 @@ void main() {
       // Set up flow: start -> (default) -> defaultNode
       startNode.next(defaultNode); // Uses 'default' action
 
-      final flow = Flow()
-      ..start(startNode);
+      final flow = Flow()..start(startNode);
 
       // Execute flow
       final result = await flow.run({});
 
-      // Should fall back to 'default' action
-      expect(result, 300);
+      // With the corrected logic, if an action is returned, the flow will only
+      // look for that specific action. If not found, the flow ends. It does
+      // NOT fall back to default.
+      expect(result, 'unknown_action');
     });
 
     test(
@@ -97,8 +98,7 @@ void main() {
         // Set up flow: start -> (default) -> nextNode
         startNode.next(nextNode); // Uses 'default' action
 
-        final flow = Flow()
-        ..start(startNode);
+        final flow = Flow()..start(startNode);
 
         // Execute flow
         final result = await flow.run({});
@@ -116,12 +116,12 @@ void main() {
       final defaultNode = ValueNode(3000);
 
       // Set up Python-style action-based flow
-      decisionNode..next(successNode, action: 'success')
-      ..next(failureNode, action: 'failure')
-      ..next(defaultNode); // default fallback
+      decisionNode
+        ..next(successNode, action: 'success')
+        ..next(failureNode, action: 'failure')
+        ..next(defaultNode); // default fallback
 
-      final flow = Flow()
-      ..start(decisionNode);
+      final flow = Flow()..start(decisionNode);
 
       // Execute flow
       final result = await flow.run({});
@@ -137,11 +137,11 @@ void main() {
       final defaultPathNode = SimpleAsyncNode((shared) async => 8888);
 
       // Set up async flow with action-based transitions
-      startNode..next(asyncPathNode, action: 'async_path')
-      ..next(defaultPathNode); // default
+      startNode
+        ..next(asyncPathNode, action: 'async_path')
+        ..next(defaultPathNode); // default
 
-      final flow = AsyncFlow()
-      ..start(startNode);
+      final flow = AsyncFlow()..start(startNode);
 
       // Execute async flow
       final result = await flow.runAsync({});
