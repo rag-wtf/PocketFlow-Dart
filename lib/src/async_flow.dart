@@ -78,8 +78,9 @@ class AsyncFlow extends Flow {
   Future<dynamic> orchAsync(
     Map<String, dynamic> shared, [
     Map<String, dynamic>? params,
+    int? maxSteps,
   ]) async {
-    return orch(shared, params);
+    return orch(shared, params, maxSteps);
   }
 
   /// Async-specific run method for AsyncFlow.

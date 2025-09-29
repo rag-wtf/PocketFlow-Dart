@@ -80,6 +80,7 @@ class Flow extends BaseNode {
   Future<dynamic> orch(
     Map<String, dynamic> shared, [
     Map<String, dynamic>? params,
+    int? maxSteps,
   ]) async {
     if (_start == null) {
       throw StateError('The start node has not been set.');
@@ -106,8 +107,17 @@ class Flow extends BaseNode {
     }
 
     dynamic lastAction;
+    var stepCount = 0;
 
     while (curr != null) {
+      // Check maxSteps guard to prevent infinite loops
+      if (maxSteps != null && stepCount >= maxSteps) {
+        throw StateError(
+          'Flow orchestration exceeded maxSteps limit of $maxSteps. '
+          'This may indicate an infinite loop in the flow.',
+        );
+      }
+
       // Set parameters on current node
       curr.params.addAll(p);
 
@@ -119,6 +129,8 @@ class Flow extends BaseNode {
       if (curr != null) {
         curr = _cloneNode(curr, clonedNodes, namedNodes);
       }
+
+      stepCount++;
     }
 
     return lastAction;

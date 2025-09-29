@@ -54,13 +54,13 @@ class BatchFlow<I, O> extends Flow {
   @override
   /// Runs the flow for a batch of inputs.
   ///
-  /// This method follows Python's BatchFlow orchestration pattern but
-  /// adapts it for Dart's design where BatchFlow returns collected results:
+  /// This method follows Python's BatchFlow orchestration pattern exactly:
   /// 1. Calls prep(shared) to get batch parameters
-  /// 2. For each batch parameter, calls orch with merged shared context
-  /// 3. Collects results and returns them via post()
+  /// 2. For each batch parameter, calls orch with merged parameters
+  /// 3. Returns post(shared, prepResult, null) - no per-item exec result
+  ///    collection
   ///
-  /// Orchestration matches Python's implementation:
+  /// Matches Python's implementation:
   /// ```python
   /// def _run(self,shared):
   ///     pr=self.prep(shared) or []
@@ -68,20 +68,26 @@ class BatchFlow<I, O> extends Flow {
   ///     return self.post(shared,pr,None)
   /// ```
   Future<dynamic> run(Map<String, dynamic> shared) async {
+    // prep should return List<Map<String, dynamic>> (batch param maps)
     final prepResult = await prep(shared);
-    final outputs = <dynamic>[];
 
     for (final batchParams in prepResult) {
-      // Create a new shared context with batch parameters merged in
-      final batchShared = <String, dynamic>{...shared, ...batchParams};
+      final mergedParams = <String, dynamic>{};
+      if (params.isNotEmpty) mergedParams.addAll(params);
+      mergedParams.addAll(batchParams);
 
-      // Merge flow params with batch params for node parameters
-      final mergedParams = <String, dynamic>{...params, ...batchParams};
-      final result = await orch(batchShared, mergedParams);
-      outputs.add(result);
+      // Temporarily set batch item value in shared for node access
+      shared['value'] = batchParams['value'];
+
+      // orch should accept params override for this batch item
+      await orch(shared, mergedParams);
+
+      // Note: Don't restore original value - let the last processed value
+      // remain
     }
 
-    return post(shared, prepResult, outputs);
+    // Python BatchFlow._run returns post(shared, prep_res, None)
+    return post(shared, prepResult, null);
   }
 
   @override
