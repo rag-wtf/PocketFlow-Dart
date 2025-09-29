@@ -13,6 +13,7 @@ abstract class BatchNode<I, O> extends Node {
   /// specific processing logic for the batch. The [items] parameter is a list
   /// of items to be processed, and the method should return a list of processed
   /// items.
+  // coverage:ignore-line
   @override
   Future<List<O>> exec(covariant List<I> items);
 
@@ -25,7 +26,7 @@ abstract class BatchNode<I, O> extends Node {
   /// Throws an [ArgumentError] if the "items" parameter is not provided or is
   /// of the wrong type.
   Future<List<I>> prep(Map<String, dynamic> shared) async {
-    final items = params['items'];
+    final items = params['items'] ?? shared['items'];
 
     if (items == null) {
       throw ArgumentError('The "items" parameter must be provided.');

@@ -111,8 +111,8 @@ void main() {
       );
     });
 
-    test('AsyncBatchFlow Orchestration', () async {
-      final flow = AsyncBatchFlow<List<int>, List<int>>([
+    test('StreamingBatchFlow Orchestration', () async {
+      final flow = StreamingBatchFlow<List<int>, List<int>>([
         AsyncBatchAddNode()..name = 'add1',
         AsyncBatchAddNode()..name = 'add2',
       ]);
@@ -125,7 +125,7 @@ void main() {
       const iterations = 1000;
 
       for (var i = 0; i < iterations; i++) {
-        await flow.run({});
+        await flow.run(<String, dynamic>{});
       }
 
       stopwatch.stop();
@@ -133,13 +133,13 @@ void main() {
       // is acceptable.
       // ignore: avoid_print
       print(
-        'AsyncBatchFlow benchmark: ${stopwatch.elapsedMilliseconds}ms for '
+        'StreamingBatchFlow benchmark: ${stopwatch.elapsedMilliseconds}ms for '
         '$iterations iterations',
       );
     });
 
-    test('AsyncParallelBatchFlow Orchestration', () async {
-      final flow = AsyncParallelBatchFlow<Map<String, List<int>>, List<int>>([
+    test('ParallelNodeBatchFlow Orchestration', () async {
+      final flow = ParallelNodeBatchFlow<Map<String, List<int>>, List<int>>([
         AsyncNode((params) async {
           final p = params as Map<String, dynamic>;
           final item = p['input'] as Map<String, List<int>>;
@@ -186,7 +186,7 @@ void main() {
       // is acceptable.
       // ignore: avoid_print
       print(
-        'AsyncParallelBatchFlow benchmark: '
+        'ParallelNodeBatchFlow benchmark: '
         '${stopwatch.elapsedMilliseconds}ms for $iterations iterations',
       );
     });

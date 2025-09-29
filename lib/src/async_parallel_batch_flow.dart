@@ -3,25 +3,26 @@ import 'dart:async';
 import 'package:pocketflow/src/async_flow.dart';
 import 'package:pocketflow/src/base_node.dart';
 
-/// A class for orchestrating parallel, asynchronous batch flows.
+/// A flow that processes a batch of items by executing a set of asynchronous
+/// nodes in parallel for each item.
 ///
-/// This flow takes a list of items and a list of nodes. For each item, it
-/// executes all the nodes in parallel. This is useful for scenarios where you
-/// have a batch of items and want to perform multiple independent asynchronous
-/// operations on each item concurrently.
+/// `AsyncParallelBatchFlow` is useful for scenarios where multiple independent
+/// asynchronous operations need to be performed on each item in a batch. For
+/// each item, the flow triggers all nodes concurrently and waits for them to
+/// complete.
 class AsyncParallelBatchFlow<TIn, TOut> extends AsyncFlow {
   /// Creates an instance of [AsyncParallelBatchFlow].
   ///
   /// The [nodes] parameter is a list of [BaseNode] instances that will be
   /// executed in parallel for each item in the batch.
-  AsyncParallelBatchFlow(List<BaseNode> nodes) : _nodes = nodes {
+  AsyncParallelBatchFlow(this.nodes) {
     if (nodes.isEmpty) {
       throw ArgumentError('The list of nodes cannot be empty.');
     }
   }
 
   /// The list of nodes to be executed in parallel for each item.
-  final List<BaseNode> _nodes;
+  final List<BaseNode> nodes;
 
   /// Executes the flow with a given list of [items].
   ///
@@ -53,7 +54,7 @@ class AsyncParallelBatchFlow<TIn, TOut> extends AsyncFlow {
     final items = List<TIn>.from(shared['input'] as List);
 
     final batchFutures = items.map((item) {
-      final nodeFutures = _nodes.map((node) {
+      final nodeFutures = nodes.map((node) {
         final clonedNode = node.clone();
         // Each node runs with the same item from the batch as input.
         return clonedNode.run({'input': item});
@@ -67,7 +68,9 @@ class AsyncParallelBatchFlow<TIn, TOut> extends AsyncFlow {
   @override
   /// Creates a deep copy of this [AsyncParallelBatchFlow].
   AsyncParallelBatchFlow<TIn, TOut> clone() {
-    final clonedNodes = _nodes.map((node) => node.clone()).toList();
-    return AsyncParallelBatchFlow<TIn, TOut>(clonedNodes);
+    final clonedNodes = nodes.map((node) => node.clone()).toList();
+    return AsyncParallelBatchFlow<TIn, TOut>(clonedNodes)
+      ..name = name
+      ..params = Map.from(params);
   }
 }

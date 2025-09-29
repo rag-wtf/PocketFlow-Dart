@@ -3,17 +3,19 @@ import 'dart:async';
 import 'package:pocketflow/src/async_flow.dart';
 import 'package:pocketflow/src/base_node.dart';
 
-/// A class for orchestrating asynchronous batch flows.
+/// A flow that processes a batch of items sequentially through a series of
+/// asynchronous nodes.
 ///
-/// This class extends [AsyncFlow] to provide a way to process a batch of items
-/// through a series of asynchronous nodes. The nodes are executed sequentially,
-/// and the output of one node becomes the input of the next.
+/// `AsyncBatchFlow` is designed for scenarios where a collection of items needs
+/// to be processed in a pipeline fashion. Each node in the flow receives the
+/// batch of items, performs an asynchronous operation, and passes the modified
+/// batch to the next node.
 class AsyncBatchFlow<TIn, TOut> extends AsyncFlow {
   /// Creates an instance of [AsyncBatchFlow].
   ///
   /// The [nodes] parameter is a list of [BaseNode] instances that make up the
   /// flow. The nodes are chained together in the order they are provided.
-  AsyncBatchFlow(List<BaseNode> nodes) {
+  AsyncBatchFlow(this.nodes) {
     if (nodes.isEmpty) {
       throw ArgumentError('The list of nodes cannot be empty.');
     }
@@ -23,6 +25,9 @@ class AsyncBatchFlow<TIn, TOut> extends AsyncFlow {
       nodes[i].next(nodes[i + 1]);
     }
   }
+
+  /// The list of nodes in the flow.
+  final List<BaseNode> nodes;
 
   @override
   /// Executes the asynchronous batch flow.
@@ -52,5 +57,13 @@ class AsyncBatchFlow<TIn, TOut> extends AsyncFlow {
     // The `super.run()` method executes the flow of nodes. Each node will
     // read and write to the `initialShared` map.
     return super.run(initialShared);
+  }
+
+  @override
+  AsyncBatchFlow<TIn, TOut> clone() {
+    final clonedNodes = nodes.map((node) => node.clone()).toList();
+    return AsyncBatchFlow<TIn, TOut>(clonedNodes)
+      ..name = name
+      ..params = Map.from(params);
   }
 }
