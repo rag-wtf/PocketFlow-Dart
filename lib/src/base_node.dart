@@ -33,6 +33,9 @@ class ConditionalTransition {
 /// to form a directed acyclic graph (DAG). Each node has a `prep` method for
 /// pre-processing, an `exec` method for the main execution logic, and a `post`
 /// method for post-processing.
+///
+/// This base class provides synchronous operations as the primary interface,
+/// matching Python's design where sync operations are the default.
 abstract class BaseNode {
   /// The unique name of the node.
   ///

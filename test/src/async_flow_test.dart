@@ -43,11 +43,11 @@ void main() {
     });
 
     test('should execute a simple async flow', () async {
-      final addNode1 = AsyncNode((dynamic storage) async {
+      final addNode1 = SimpleAsyncNode((dynamic storage) async {
         (storage as Map<String, dynamic>)['result'] = await asyncAdd(10, 12);
         return storage;
       });
-      final addNode2 = AsyncNode((dynamic storage) async {
+      final addNode2 = SimpleAsyncNode((dynamic storage) async {
         (storage as Map<String, dynamic>)['result'] = await asyncAdd(5, 5);
         return storage;
       });

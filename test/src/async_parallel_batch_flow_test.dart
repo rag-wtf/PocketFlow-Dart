@@ -5,11 +5,11 @@ void main() {
   group('AsyncParallelBatchFlow', () {
     test('should process a batch of inputs in parallel', () async {
       final flow = AsyncParallelBatchFlow<int, int>([
-        AsyncNode(
+        SimpleAsyncNode(
           (dynamic r) async =>
               ((r as Map<String, dynamic>)['input'] as int) * 2,
         ),
-        AsyncNode(
+        SimpleAsyncNode(
           (dynamic r) async =>
               ((r as Map<String, dynamic>)['input'] as int) * 3,
         ),
@@ -25,7 +25,7 @@ void main() {
 
     test('should handle an empty input list', () async {
       final flow = AsyncParallelBatchFlow<int, int>([
-        AsyncNode((dynamic r) async => 1),
+        SimpleAsyncNode((dynamic r) async => 1),
       ]);
       final result = await flow.call([]);
       expect(result, isEmpty);
@@ -40,7 +40,7 @@ void main() {
 
     test('run should throw ArgumentError if input parameter is missing', () {
       final flow = AsyncParallelBatchFlow<int, int>([
-        AsyncNode((dynamic r) async => 1),
+        SimpleAsyncNode((dynamic r) async => 1),
       ]);
       // No 'input' in params
       expect(
@@ -51,7 +51,7 @@ void main() {
 
     test('run should throw ArgumentError if input is not a List', () {
       final flow = AsyncParallelBatchFlow<int, int>([
-        AsyncNode((dynamic r) async => 1),
+        SimpleAsyncNode((dynamic r) async => 1),
       ]);
       flow.params['input'] = 'not a list';
       expect(
@@ -61,7 +61,7 @@ void main() {
     });
 
     test('clone should create a deep copy of the flow', () {
-      final node = AsyncNode((dynamic r) async => 1);
+      final node = SimpleAsyncNode((dynamic r) async => 1);
       final flow = AsyncParallelBatchFlow<int, int>([node])
         ..name = 'ParallelFlow'
         ..params['value'] = 42;
@@ -76,8 +76,8 @@ void main() {
 
     test('should propagate errors from nodes', () async {
       final flow = AsyncParallelBatchFlow<int, int>([
-        AsyncNode((dynamic r) async => 1),
-        AsyncNode((dynamic r) async => throw Exception('Node error')),
+        SimpleAsyncNode((dynamic r) async => 1),
+        SimpleAsyncNode((dynamic r) async => throw Exception('Node error')),
       ]);
 
       expect(
