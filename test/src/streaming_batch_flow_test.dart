@@ -1,4 +1,4 @@
-import 'package:pocketflow/pocketflow.dart';
+import 'package:pocketflow/pocketflow_extensions.dart';
 import 'package:test/test.dart';
 
 void main() {
