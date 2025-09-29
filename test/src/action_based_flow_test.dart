@@ -1,11 +1,11 @@
-import 'package:test/test.dart';
 import 'package:pocketflow/pocketflow.dart';
+import 'package:test/test.dart';
 
 /// Test node that returns specific actions for testing action-based transitions
 class ActionNode extends Node {
-  final String actionToReturn;
   
   ActionNode(this.actionToReturn);
+  final String actionToReturn;
   
   @override
   Future<dynamic> exec(dynamic prepResult) async {
@@ -22,9 +22,9 @@ class ActionNode extends Node {
 
 /// Test node that returns a value for testing
 class ValueNode extends Node {
-  final int value;
   
   ValueNode(this.value);
+  final int value;
   
   @override
   Future<dynamic> exec(dynamic prepResult) async {
