@@ -218,6 +218,26 @@ void main() {
       );
       expect(lastAction, 'specific_action');
     });
+
+    test('Flow.clone() should copy params and start node', () async {
+      final startNode = NumberNode(42);
+      final flow = Flow(start: startNode);
+      flow.params['id'] = 123;
+
+      final clonedFlow = flow.clone();
+
+      // Check that params are copied
+      expect(clonedFlow.params['id'], 123);
+
+      // Check that the start node was cloned by running the flow
+      final shared = <String, dynamic>{};
+      await clonedFlow.run(shared);
+      expect(shared['current'], 42);
+
+      // Verify that the clone is a separate instance
+      clonedFlow.params['id'] = 456;
+      expect(flow.params['id'], 123);
+    });
   });
 }
 

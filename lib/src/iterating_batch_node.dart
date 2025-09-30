@@ -13,9 +13,10 @@ abstract class IteratingBatchNode<I, O> extends Node {
   /// specific processing logic for a single item. The [item] parameter is a
   /// single item to be processed, and the method should return a processed
   /// item.
-  // coverage:ignore-line
+  // LCOV_EXCL_START
   @override
   Future<O> exec(covariant I item);
+  // LCOV_EXCL_STOP
 
   @override
   /// Prepares the batch of items for processing.

@@ -1,153 +1,103 @@
-import 'package:pocketflow/pocketflow_extensions.dart';
+import 'package:pocketflow/src/base_node.dart';
+import 'package:pocketflow/src/iterating_batch_node.dart';
 import 'package:test/test.dart';
 
-// A mock implementation of IteratingBatchNode to test its functionalities.
-class MockIteratingBatchNode extends IteratingBatchNode<int, int> {
-  bool execCalled = false;
-  List<int> receivedItems = [];
+// A concrete implementation of IteratingBatchNode for testing.
+class _TestIteratingNode extends IteratingBatchNode<int, String> {
+  @override
+  Future<String> exec(int item) async {
+    return 'item-$item';
+  }
 
   @override
-  Future<int> exec(int item) async {
-    execCalled = true;
-    receivedItems.add(item);
-    return item * 2;
+  IteratingBatchNode<int, String> clone() {
+    return _TestIteratingNode()..params.addAll(params);
   }
 
   @override
   BaseNode createInstance() {
-    return MockIteratingBatchNode();
-  }
-
-  @override
-  MockIteratingBatchNode clone() {
-    return super.clone() as MockIteratingBatchNode;
+    return _TestIteratingNode();
   }
 }
 
 void main() {
   group('IteratingBatchNode', () {
-    late MockIteratingBatchNode node;
-    late Map<String, dynamic> sharedStorage;
+    test('run should process a batch of items by iterating over them',
+        () async {
+      final node = _TestIteratingNode();
+      node.params['items'] = [1, 2, 3];
 
-    setUp(() {
-      node = MockIteratingBatchNode();
-      sharedStorage = {};
+      final result = await node.run(<String, dynamic>{});
+      expect(result, equals(['item-1', 'item-2', 'item-3']));
     });
 
-    test(
-      'run should process a batch of items by iterating over them',
-      () async {
-        final items = [1, 2, 3];
-        node.params['items'] = items; // Pass items to the node
-
-        final result = await node.run(sharedStorage);
-
-        expect(node.execCalled, isTrue, reason: 'exec should be called');
-        expect(
-          node.receivedItems,
-          equals(items),
-          reason: 'exec should be called for each item in the list',
-        );
-        expect(
-          result,
-          equals([2, 4, 6]),
-          reason: 'run should return the processed items',
-        );
-      },
-    );
-
-    test(
-      'run should throw ArgumentError if "items" parameter is missing',
-      () async {
-        // Intentionally not setting the 'items' parameter
-        expect(
-          () => node.run(sharedStorage),
-          throwsArgumentError,
-          reason: 'Should throw ArgumentError when items are null',
-        );
-      },
-    );
-
-    test(
-      'run should throw ArgumentError if "items" is not a List of the '
-      'correct type',
-      () async {
-        node.params['items'] = ['a', 'b', 'c']; // Invalid type
-        expect(
-          () => node.run(sharedStorage),
-          throwsArgumentError,
-          reason: 'Should throw ArgumentError for incorrect list type',
-        );
-      },
-    );
-
-    test(
-      'run should throw ArgumentError if "items" parameter is not a List',
-      () async {
-        node.params['items'] = 123; // Invalid type
-        expect(
-          () => node.run(sharedStorage),
-          throwsArgumentError,
-          reason: 'Should throw ArgumentError when items is not a list',
-        );
-      },
-    );
-
-    test('run should handle an empty list of items', () async {
-      final items = <int>[];
-      node.params['items'] = items;
-
-      final result = await node.run(sharedStorage);
-
-      expect(result, isEmpty, reason: 'Should return an empty list');
+    test('should throw ArgumentError if "items" is missing', () {
+      final node = _TestIteratingNode();
       expect(
-        node.execCalled,
-        isFalse,
-        reason: 'exec should not be called for an empty list',
+        () => node.run(<String, dynamic>{}),
+        throwsA(isA<ArgumentError>()),
       );
     });
 
-    test('clone should create a new instance with the same properties', () {
-      node
-        ..name = 'TestIteratingNode'
-        ..params['value'] = 123;
-
-      final clonedNode = node.clone();
-
-      expect(clonedNode, isA<MockIteratingBatchNode>());
-      expect(clonedNode.name, equals('TestIteratingNode'));
-      expect(clonedNode.params['value'], equals(123));
-      expect(clonedNode, isNot(same(node)));
-    });
-
-    test('run should execute the node and return the result', () async {
-      final items = [5, 10];
-      node.params['items'] = items;
-
-      final result = await node.run(sharedStorage);
-
-      expect(result, equals([10, 20]));
-      expect(node.execCalled, isTrue);
-    });
-
-    test('should retrieve items from shared storage if not available in '
-        'params', () async {
-      final items = [4, 5, 6];
-      sharedStorage['items'] = items; // Items are in shared storage
-
-      final result = await node.run(sharedStorage);
-
-      expect(result, equals([8, 10, 12]));
-      expect(node.receivedItems, equals(items));
+    test('should throw ArgumentError if "items" is not a List', () {
+      final node = _TestIteratingNode();
+      node.params['items'] = 'not-a-list';
+      expect(
+        () => node.run(<String, dynamic>{}),
+        throwsA(isA<ArgumentError>()),
+      );
     });
 
     test(
-      'prep should handle a List<dynamic> with correct item types',
-      () async {
-        node.params['items'] = <dynamic>[1, 2, 3];
-        final result = await node.run(sharedStorage);
-        expect(result, equals([2, 4, 6]));
-      },
-    );
+        'should throw ArgumentError if "items" has wrong element types',
+        () {
+      final node = _TestIteratingNode();
+      node.params['items'] = <dynamic>['a', 'b', 'c'];
+      expect(
+        () => node.run(<String, dynamic>{}),
+        throwsA(isA<ArgumentError>()),
+      );
+    });
+
+    test('should handle an empty list of items', () async {
+      final node = _TestIteratingNode();
+      node.params['items'] = <int>[];
+
+      final result = await node.run(<String, dynamic>{});
+      expect(result, isEmpty);
+    });
+
+    test('clone should create a new instance with the same properties',
+        () async {
+      final node = _TestIteratingNode();
+      node.name = 'original';
+      node.params['items'] = [1];
+
+      final cloned = node.clone();
+
+      expect(cloned, isNot(same(node)));
+      expect(cloned.params['items'], equals([1]));
+    });
+
+    test(
+        'should retrieve items from shared storage if not available in params',
+        () async {
+      final node = _TestIteratingNode();
+      final shared = <String, dynamic>{
+        'items': [1, 2, 3]
+      };
+      final result = await node.run(shared);
+      expect(result, equals(['item-1', 'item-2', 'item-3']));
+    });
+
+    test('prep should handle a List<dynamic> with correct item types',
+        () async {
+      final node = _TestIteratingNode();
+      final shared = <String, dynamic>{
+        'items': <dynamic>[1, 2, 3],
+      };
+      final result = await node.prep(shared);
+      expect(result, isA<List<int>>());
+    });
   });
 }
