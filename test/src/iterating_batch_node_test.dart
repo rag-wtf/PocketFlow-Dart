@@ -22,14 +22,16 @@ class _TestIteratingNode extends IteratingBatchNode<int, String> {
 
 void main() {
   group('IteratingBatchNode', () {
-    test('run should process a batch of items by iterating over them',
-        () async {
-      final node = _TestIteratingNode();
-      node.params['items'] = [1, 2, 3];
+    test(
+      'run should process a batch of items by iterating over them',
+      () async {
+        final node = _TestIteratingNode();
+        node.params['items'] = [1, 2, 3];
 
-      final result = await node.run(<String, dynamic>{});
-      expect(result, equals(['item-1', 'item-2', 'item-3']));
-    });
+        final result = await node.run(<String, dynamic>{});
+        expect(result, equals(['item-1', 'item-2', 'item-3']));
+      },
+    );
 
     test('should throw ArgumentError if "items" is missing', () {
       final node = _TestIteratingNode();
@@ -48,9 +50,7 @@ void main() {
       );
     });
 
-    test(
-        'should throw ArgumentError if "items" has wrong element types',
-        () {
+    test('should throw ArgumentError if "items" has wrong element types', () {
       final node = _TestIteratingNode();
       node.params['items'] = <dynamic>['a', 'b', 'c'];
       expect(
@@ -67,37 +67,42 @@ void main() {
       expect(result, isEmpty);
     });
 
-    test('clone should create a new instance with the same properties',
-        () async {
-      final node = _TestIteratingNode();
-      node.name = 'original';
-      node.params['items'] = [1];
+    test(
+      'clone should create a new instance with the same properties',
+      () async {
+        final node = _TestIteratingNode()
+        ..name = 'original';
+        node.params['items'] = [1];
 
-      final cloned = node.clone();
+        final cloned = node.clone();
 
-      expect(cloned, isNot(same(node)));
-      expect(cloned.params['items'], equals([1]));
-    });
+        expect(cloned, isNot(same(node)));
+        expect(cloned.params['items'], equals([1]));
+      },
+    );
 
     test(
-        'should retrieve items from shared storage if not available in params',
-        () async {
-      final node = _TestIteratingNode();
-      final shared = <String, dynamic>{
-        'items': [1, 2, 3]
-      };
-      final result = await node.run(shared);
-      expect(result, equals(['item-1', 'item-2', 'item-3']));
-    });
+      'should retrieve items from shared storage if not available in params',
+      () async {
+        final node = _TestIteratingNode();
+        final shared = <String, dynamic>{
+          'items': [1, 2, 3],
+        };
+        final result = await node.run(shared);
+        expect(result, equals(['item-1', 'item-2', 'item-3']));
+      },
+    );
 
-    test('prep should handle a List<dynamic> with correct item types',
-        () async {
-      final node = _TestIteratingNode();
-      final shared = <String, dynamic>{
-        'items': <dynamic>[1, 2, 3],
-      };
-      final result = await node.prep(shared);
-      expect(result, isA<List<int>>());
-    });
+    test(
+      'prep should handle a List<dynamic> with correct item types',
+      () async {
+        final node = _TestIteratingNode();
+        final shared = <String, dynamic>{
+          'items': <dynamic>[1, 2, 3],
+        };
+        final result = await node.prep(shared);
+        expect(result, isA<List<int>>());
+      },
+    );
   });
 }
