@@ -5,9 +5,9 @@ import 'package:test/test.dart';
 
 // A node that splits an array into chunks and sums each chunk.
 class ArrayChunkNode extends BatchNode<List<int>, int> {
-  final int chunkSize;
 
   ArrayChunkNode({this.chunkSize = 10});
+  final int chunkSize;
 
   @override
   Future<List<List<int>>> prep(Map<String, dynamic> sharedStorage) async {
@@ -32,7 +32,7 @@ class ArrayChunkNode extends BatchNode<List<int>, int> {
     dynamic procResult,
   ) async {
     sharedStorage['chunk_results'] = procResult;
-    return "default";
+    return 'default';
   }
 
   @override
@@ -59,7 +59,7 @@ void main() {
         'input_array': List<int>.generate(25, (i) => i), // [0, 1, ..., 24]
       };
 
-      final chunkNode = ArrayChunkNode(chunkSize: 10);
+      final chunkNode = ArrayChunkNode();
       await chunkNode.run(sharedStorage);
 
       final results = sharedStorage['chunk_results'] as List<int>;
@@ -84,11 +84,11 @@ void main() {
     }
 
     test('Map-reduce sum', () async {
-      await runMapReduceTest(List<int>.generate(100, (i) => i), chunkSize: 10);
+      await runMapReduceTest(List<int>.generate(100, (i) => i));
     });
 
     test('Uneven chunks', () async {
-      await runMapReduceTest(List<int>.generate(25, (i) => i), chunkSize: 10);
+      await runMapReduceTest(List<int>.generate(25, (i) => i));
     });
 
     test('Custom chunk size', () async {
@@ -100,7 +100,7 @@ void main() {
     });
 
     test('Empty array', () async {
-      await runMapReduceTest(<int>[], chunkSize: 10);
+      await runMapReduceTest(<int>[]);
     });
   });
 }

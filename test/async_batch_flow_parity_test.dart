@@ -39,7 +39,7 @@ class AsyncDataProcessNode extends AsyncNode {
     ); // Simulate async work
     final key = params['key'];
     sharedStorage['results'][key] = prepResult * 2; // Double the value
-    return "processed";
+    return 'processed';
   }
 
   @override
@@ -58,7 +58,7 @@ class AsyncErrorNode extends AsyncNode {
     if (key == 'error_key') {
       throw Exception('Async error processing key: $key');
     }
-    return "processed";
+    return 'processed';
   }
 
   @override
@@ -81,7 +81,7 @@ class _InnerNode extends AsyncNode {
     sharedStorage['current_key'] =
         key; // Pass key to next node via shared state
     await Future<void>.delayed(const Duration(milliseconds: 10));
-    return "next";
+    return 'next';
   }
 
   @override
@@ -102,7 +102,7 @@ class _OuterNode extends AsyncNode {
     sharedStorage['results'][key] =
         sharedStorage['intermediate_results'][key] * 2;
     await Future<void>.delayed(const Duration(milliseconds: 10));
-    return "done";
+    return 'done';
   }
 
   @override
@@ -124,7 +124,7 @@ class _CustomParamNode extends AsyncNode {
     }
     sharedStorage['results'][key] =
         sharedStorage['input_data'][key] * multiplier;
-    return "done";
+    return 'done';
   }
 
   @override

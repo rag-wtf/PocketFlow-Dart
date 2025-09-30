@@ -3,11 +3,11 @@ import 'package:test/test.dart';
 
 // Processes a batch of numbers asynchronously and in parallel.
 class AsyncParallelNumberProcessor extends Node {
-  final Duration delay;
 
   AsyncParallelNumberProcessor({
     this.delay = const Duration(milliseconds: 100),
   });
+  final Duration delay;
 
   @override
   Future<List<int>> prep(Map<String, dynamic> sharedStorage) async {
@@ -38,7 +38,7 @@ class AsyncParallelNumberProcessor extends Node {
     final batchId = params['batch_id'] as int;
     (sharedStorage['processed_numbers'] as Map<int, List<int>>)[batchId] =
         execResult as List<int>;
-    return "processed";
+    return 'processed';
   }
 
   @override
@@ -75,13 +75,12 @@ class AsyncAggregatorNode extends AsyncNode {
     dynamic execResult,
   ) async {
     sharedStorage['total'] = execResult;
-    return "aggregated";
+    return 'aggregated';
   }
 
   @override
   BaseNode createInstance() => AsyncAggregatorNode();
 }
-
 
 void main() {
   group('AsyncParallelBatchFlow Parity Tests', () {

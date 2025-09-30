@@ -4,8 +4,8 @@ import 'package:test/test.dart';
 // --- Node Definitions ---
 
 class NumberNode extends Node {
-  final int number;
   NumberNode(this.number);
+  final int number;
 
   @override
   Future<void> prep(Map<String, dynamic> sharedStorage) async {
@@ -17,8 +17,8 @@ class NumberNode extends Node {
 }
 
 class AddNode extends Node {
-  final int number;
   AddNode(this.number);
+  final int number;
 
   @override
   Future<void> prep(Map<String, dynamic> sharedStorage) async {
@@ -30,8 +30,8 @@ class AddNode extends Node {
 }
 
 class MultiplyNode extends Node {
-  final int number;
   MultiplyNode(this.number);
+  final int number;
 
   @override
   Future<void> prep(Map<String, dynamic> sharedStorage) async {
@@ -66,8 +66,8 @@ class NoOpNode extends Node {
 }
 
 class EndSignalNode extends Node {
+  EndSignalNode({this.signal = 'finished'});
   final String signal;
-  EndSignalNode({this.signal = "finished"});
 
   @override
   Future<String> post(
@@ -159,7 +159,7 @@ void main() {
       final n1 = NumberNode(10);
       final check = CheckPositiveNode();
       final subtract3 = AddNode(-3);
-      final endNode = EndSignalNode(signal: "cycle_done");
+      final endNode = EndSignalNode(signal: 'cycle_done');
 
       final pipeline = Flow(start: n1);
       n1 >> check;
@@ -169,7 +169,7 @@ void main() {
 
       final lastAction = await pipeline.run(sharedStorage);
       expect(sharedStorage['current'], -2); // 10 -> 7 -> 4 -> 1 -> -2
-      expect(lastAction, "cycle_done");
+      expect(lastAction, 'cycle_done');
     });
 
     test('Flow ends warning default missing', () async {
@@ -180,7 +180,7 @@ void main() {
       final nextNode = NoOpNode();
 
       final pipeline = Flow(start: startNode);
-      startNode - "specific_action" >> nextNode;
+      startNode - 'specific_action' >> nextNode;
 
       final lastAction = await pipeline.run(sharedStorage);
 
@@ -196,7 +196,7 @@ void main() {
       final sharedStorage = <String, dynamic>{};
       final logs = <String>[];
 
-      final startNode = _ActionNode("specific_action")..log = logs.add;
+      final startNode = _ActionNode('specific_action')..log = logs.add;
       final nextNode = NoOpNode();
 
       final pipeline = Flow(start: startNode);
@@ -211,14 +211,14 @@ void main() {
           "Warning: Flow ends: 'specific_action' not found in [default]",
         ),
       );
-      expect(lastAction, "specific_action");
+      expect(lastAction, 'specific_action');
     });
   });
 }
 
 class _ActionNode extends Node {
-  final String? _action;
   _ActionNode(this._action);
+  final String? _action;
 
   @override
   Future<dynamic> post(

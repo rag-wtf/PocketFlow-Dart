@@ -3,11 +3,10 @@ import 'package:test/test.dart';
 
 // A synchronous node that can fail and has a fallback mechanism.
 class FallbackNode extends Node {
+
+  FallbackNode({this.shouldFail = true, super.maxRetries});
   final bool shouldFail;
   int attemptCount = 0;
-
-  FallbackNode({this.shouldFail = true, int maxRetries = 1})
-    : super(maxRetries: maxRetries);
 
   @override
   Future<void> prep(Map<String, dynamic> sharedStorage) async {
@@ -20,14 +19,14 @@ class FallbackNode extends Node {
   Future<dynamic> exec(dynamic prepResult) async {
     attemptCount++;
     if (shouldFail) {
-      throw Exception("Intentional failure");
+      throw Exception('Intentional failure');
     }
-    return "success";
+    return 'success';
   }
 
   @override
   Future<dynamic> execFallback(dynamic prepResult, Exception exc) async {
-    return "fallback";
+    return 'fallback';
   }
 
   @override
@@ -49,11 +48,10 @@ class FallbackNode extends Node {
 
 // An asynchronous node that can fail and has a fallback mechanism.
 class AsyncFallbackNode extends AsyncNode {
+
+  AsyncFallbackNode({this.shouldFail = true, super.maxRetries});
   final bool shouldFail;
   int attemptCount = 0;
-
-  AsyncFallbackNode({this.shouldFail = true, int maxRetries = 1})
-    : super(maxRetries: maxRetries);
 
   @override
   Future<void> prep(Map<String, dynamic> sharedStorage) async {
@@ -66,15 +64,15 @@ class AsyncFallbackNode extends AsyncNode {
   Future<dynamic> exec(dynamic prepResult) async {
     attemptCount++;
     if (shouldFail) {
-      throw Exception("Intentional async failure");
+      throw Exception('Intentional async failure');
     }
-    return "success";
+    return 'success';
   }
 
   @override
   Future<dynamic> execFallback(dynamic prepResult, Exception exc) async {
     await Future<void>.delayed(const Duration(milliseconds: 10));
-    return "async_fallback";
+    return 'async_fallback';
   }
 
   @override
@@ -172,23 +170,23 @@ void main() {
       final results = sharedStorage['results'] as List;
       expect(results.length, 1);
       expect(results[0]['attempts'], 1);
-      expect(results[0]['result'], "success");
+      expect(results[0]['result'], 'success');
     });
 
     test('Fallback after failure', () async {
       final sharedStorage = <String, dynamic>{};
-      final node = FallbackNode(shouldFail: true, maxRetries: 2);
+      final node = FallbackNode(maxRetries: 2);
       await node.run(sharedStorage);
 
       final results = sharedStorage['results'] as List;
       expect(results.length, 1);
       expect(results[0]['attempts'], 2);
-      expect(results[0]['result'], "fallback");
+      expect(results[0]['result'], 'fallback');
     });
 
     test('Fallback in flow', () async {
       final sharedStorage = <String, dynamic>{};
-      final fallbackNode = FallbackNode(shouldFail: true);
+      final fallbackNode = FallbackNode();
       final resultNode = _ResultNode();
       fallbackNode >> resultNode;
 
@@ -197,8 +195,8 @@ void main() {
 
       final results = sharedStorage['results'] as List;
       expect(results.length, 1);
-      expect(results[0]['result'], "fallback");
-      expect(sharedStorage['final_result'], "fallback");
+      expect(results[0]['result'], 'fallback');
+      expect(sharedStorage['final_result'], 'fallback');
     });
 
     test('No fallback implementation', () {
@@ -208,13 +206,13 @@ void main() {
 
     test('Retry before fallback', () async {
       final sharedStorage = <String, dynamic>{};
-      final node = FallbackNode(shouldFail: true, maxRetries: 3);
+      final node = FallbackNode(maxRetries: 3);
       await node.run(sharedStorage);
 
       final results = sharedStorage['results'] as List;
       expect(results.length, 1);
       expect(results[0]['attempts'], 3);
-      expect(results[0]['result'], "fallback");
+      expect(results[0]['result'], 'fallback');
     });
   });
 
@@ -229,23 +227,23 @@ void main() {
         final results = sharedStorage['results'] as List;
         expect(results.length, 1);
         expect(results[0]['attempts'], 1);
-        expect(results[0]['result'], "success");
+        expect(results[0]['result'], 'success');
       });
 
       test('Async fallback after failure', () async {
         final sharedStorage = <String, dynamic>{};
-        final node = AsyncFallbackNode(shouldFail: true, maxRetries: 2);
+        final node = AsyncFallbackNode(maxRetries: 2);
         await node.run(sharedStorage);
 
         final results = sharedStorage['results'] as List;
         expect(results.length, 1);
         expect(results[0]['attempts'], 2);
-        expect(results[0]['result'], "async_fallback");
+        expect(results[0]['result'], 'async_fallback');
       });
 
       test('Async fallback in flow', () async {
         final sharedStorage = <String, dynamic>{};
-        final fallbackNode = AsyncFallbackNode(shouldFail: true);
+        final fallbackNode = AsyncFallbackNode();
         final resultNode = _AsyncResultNode();
         fallbackNode >> resultNode;
 
@@ -254,24 +252,24 @@ void main() {
 
         final results = sharedStorage['results'] as List;
         expect(results.length, 1);
-        expect(results[0]['result'], "async_fallback");
-        expect(sharedStorage['final_result'], "async_fallback");
+        expect(results[0]['result'], 'async_fallback');
+        expect(sharedStorage['final_result'], 'async_fallback');
       });
 
       test('Async no fallback implementation', () {
         final node = _NoFallbackAsyncNode();
-        expect(() async => await node.run({}), throwsException);
+        expect(() async => node.run({}), throwsException);
       });
 
       test('Async retry before fallback', () async {
         final sharedStorage = <String, dynamic>{};
-        final node = AsyncFallbackNode(shouldFail: true, maxRetries: 3);
+        final node = AsyncFallbackNode(maxRetries: 3);
         await node.run(sharedStorage);
 
         final results = sharedStorage['results'] as List;
         expect(results.length, 1);
         expect(results[0]['attempts'], 3);
-        expect(results[0]['result'], "async_fallback");
+        expect(results[0]['result'], 'async_fallback');
       });
     },
     skip: 'Skipping due to fundamental state management issues in AsyncFlow.',

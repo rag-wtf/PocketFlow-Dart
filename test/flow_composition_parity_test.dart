@@ -4,8 +4,8 @@ import 'package:test/test.dart';
 // --- Node Definitions ---
 
 class NumberNode extends Node {
-  final int number;
   NumberNode(this.number);
+  final int number;
 
   @override
   Future<void> prep(Map<String, dynamic> sharedStorage) async {
@@ -17,8 +17,8 @@ class NumberNode extends Node {
 }
 
 class AddNode extends Node {
-  final int number;
   AddNode(this.number);
+  final int number;
 
   @override
   Future<void> prep(Map<String, dynamic> sharedStorage) async {
@@ -30,8 +30,8 @@ class AddNode extends Node {
 }
 
 class MultiplyNode extends Node {
-  final int number;
   MultiplyNode(this.number);
+  final int number;
 
   @override
   Future<void> prep(Map<String, dynamic> sharedStorage) async {
@@ -44,8 +44,8 @@ class MultiplyNode extends Node {
 
 // A node that returns a specific signal string from its post method.
 class SignalNode extends Node {
-  final String signal;
   SignalNode(this.signal);
+  final String signal;
 
   @override
   Future<String> post(
@@ -63,8 +63,8 @@ class SignalNode extends Node {
 
 // A node to indicate which path was taken in the outer flow.
 class PathNode extends Node {
-  final String pathId;
   PathNode(this.pathId);
+  final String pathId;
 
   @override
   Future<void> prep(Map<String, dynamic> sharedStorage) async {
@@ -125,23 +125,23 @@ void main() {
       final sharedStorage = <String, dynamic>{};
 
       final innerStartNode = NumberNode(100);
-      final innerEndNode = SignalNode("inner_done");
+      final innerEndNode = SignalNode('inner_done');
       innerStartNode >> innerEndNode;
       final innerFlow = Flow(start: innerStartNode);
 
-      final pathANode = PathNode("A");
-      final pathBNode = PathNode("B");
+      final pathANode = PathNode('A');
+      final pathBNode = PathNode('B');
 
       final outerFlow = Flow(start: innerFlow);
 
-      innerFlow - "inner_done" >> pathBNode;
-      innerFlow - "other_action" >> pathANode;
+      innerFlow - 'inner_done' >> pathBNode;
+      innerFlow - 'other_action' >> pathANode;
 
       final lastActionOuter = await outerFlow.run(sharedStorage);
 
       expect(sharedStorage['current'], 100);
-      expect(sharedStorage['last_signal_emitted'], "inner_done");
-      expect(sharedStorage['path_taken'], "B");
+      expect(sharedStorage['last_signal_emitted'], 'inner_done');
+      expect(sharedStorage['path_taken'], 'B');
       expect(lastActionOuter, isNull);
     });
   });

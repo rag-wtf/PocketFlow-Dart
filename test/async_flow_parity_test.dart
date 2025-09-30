@@ -3,14 +3,14 @@ import 'package:test/test.dart';
 
 // Simple async node that sets 'current' to a given number.
 class AsyncNumberNode extends AsyncNode {
-  final int number;
 
   AsyncNumberNode(this.number);
+  final int number;
 
   @override
   Future<dynamic> prep(Map<String, dynamic> sharedStorage) async {
     sharedStorage['current'] = number;
-    return "set_number";
+    return 'set_number';
   }
 
   @override
@@ -20,7 +20,7 @@ class AsyncNumberNode extends AsyncNode {
     dynamic procResult,
   ) async {
     await Future<void>.delayed(const Duration(milliseconds: 10));
-    return "number_set";
+    return 'number_set';
   }
 
   @override
@@ -32,7 +32,7 @@ class AsyncIncrementNode extends AsyncNode {
   @override
   Future<dynamic> prep(Map<String, dynamic> sharedStorage) async {
     sharedStorage['current'] = (sharedStorage['current'] as int? ?? 0) + 1;
-    return "incremented";
+    return 'incremented';
   }
 
   @override
@@ -42,7 +42,7 @@ class AsyncIncrementNode extends AsyncNode {
     dynamic procResult,
   ) async {
     await Future<void>.delayed(const Duration(milliseconds: 10));
-    return "done";
+    return 'done';
   }
 
   @override
@@ -51,9 +51,9 @@ class AsyncIncrementNode extends AsyncNode {
 
 // An async node that returns a specific signal string from post.
 class AsyncSignalNode extends AsyncNode {
-  final String signal;
 
   AsyncSignalNode(this.signal);
+  final String signal;
 
   @override
   Future<void> prep(Map<String, dynamic> sharedStorage) async {
@@ -77,9 +77,9 @@ class AsyncSignalNode extends AsyncNode {
 
 // An async node to indicate which path was taken in the outer flow.
 class AsyncPathNode extends AsyncNode {
-  final String pathId;
 
   AsyncPathNode(this.pathId);
+  final String pathId;
 
   @override
   Future<void> prep(Map<String, dynamic> sharedStorage) async {

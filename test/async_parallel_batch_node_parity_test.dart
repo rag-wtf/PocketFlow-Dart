@@ -3,11 +3,11 @@ import 'package:test/test.dart';
 
 // A node that processes a list of numbers in parallel.
 class AsyncParallelNumberProcessor extends Node {
-  final Duration delay;
 
   AsyncParallelNumberProcessor({
     this.delay = const Duration(milliseconds: 100),
   });
+  final Duration delay;
 
   @override
   Future<List<int>> prep(Map<String, dynamic> sharedStorage) async {
@@ -31,7 +31,7 @@ class AsyncParallelNumberProcessor extends Node {
     dynamic execResult,
   ) async {
     sharedStorage['processed_numbers'] = execResult;
-    return "processed";
+    return 'processed';
   }
 
   @override
@@ -46,7 +46,7 @@ void main() {
       };
 
       final processor = AsyncParallelNumberProcessor(
-        delay: const Duration(milliseconds: 100),
+        
       );
 
       final stopwatch = Stopwatch()..start();
@@ -144,8 +144,8 @@ class _ErrorProcessor extends Node {
 }
 
 class _OrderTrackingProcessor extends Node {
-  final List<int> executionOrder;
   _OrderTrackingProcessor(this.executionOrder);
+  final List<int> executionOrder;
 
   @override
   Future<List<int>> prep(Map<String, dynamic> sharedStorage) async {

@@ -5,9 +5,9 @@ import 'package:test/test.dart';
 
 // A node that splits an array into chunks and processes them asynchronously in parallel.
 class AsyncArrayChunkNode extends AsyncParallelBatchNode<List<int>, int> {
-  final int chunkSize;
 
   AsyncArrayChunkNode({this.chunkSize = 10}) : super(_execChunk);
+  final int chunkSize;
 
   static Future<int> _execChunk(List<int> chunk) async {
     await Future<void>.delayed(
@@ -39,7 +39,7 @@ class AsyncArrayChunkNode extends AsyncParallelBatchNode<List<int>, int> {
     dynamic procResult,
   ) async {
     sharedStorage['chunk_results'] = procResult as List<int>;
-    return "processed";
+    return 'processed';
   }
 
   @override
@@ -58,7 +58,7 @@ class AsyncSumReduceNode extends AsyncNode {
     ); // Simulate async processing
     final total = chunkResults.fold<int>(0, (sum, item) => sum + item);
     sharedStorage['total'] = total;
-    return "reduced";
+    return 'reduced';
   }
 
   @override
@@ -74,7 +74,7 @@ void main() {
         'input_array': List<int>.generate(25, (i) => i), // [0, 1, ..., 24]
       };
 
-      final chunkNode = AsyncArrayChunkNode(chunkSize: 10);
+      final chunkNode = AsyncArrayChunkNode();
       await chunkNode.run(sharedStorage);
 
       final results = sharedStorage['chunk_results'] as List<int>;
@@ -139,12 +139,12 @@ void main() {
 
     test('Error handling', () async {
       // A node that throws an error for a specific item.
-      final exec = (int item) async {
+      Future<int> exec(int item) async {
         if (item == 2) {
-          throw Exception("Error processing item 2");
+          throw Exception('Error processing item 2');
         }
         return item;
-      };
+      }
       final errorNode = AsyncParallelBatchNode<int, int>(exec);
       errorNode.params = {
         'items': [1, 2, 3],
