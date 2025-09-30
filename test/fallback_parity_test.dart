@@ -1,9 +1,13 @@
+// The `>>` operator is used for its side effects of building the flow graph.
+// The analyzer doesn't recognize this and flags it as an unnecessary
+// statement. The dynamic calls are part of the test setup and are safe.
+// ignore_for_file: unnecessary_statements, avoid_dynamic_calls
+
 import 'package:pocketflow/pocketflow.dart';
 import 'package:test/test.dart';
 
 // A synchronous node that can fail and has a fallback mechanism.
 class FallbackNode extends Node {
-
   FallbackNode({this.shouldFail = true, super.maxRetries});
   final bool shouldFail;
   int attemptCount = 0;
@@ -48,7 +52,6 @@ class FallbackNode extends Node {
 
 // An asynchronous node that can fail and has a fallback mechanism.
 class AsyncFallbackNode extends AsyncNode {
-
   AsyncFallbackNode({this.shouldFail = true, super.maxRetries});
   final bool shouldFail;
   int attemptCount = 0;
@@ -95,7 +98,8 @@ class AsyncFallbackNode extends AsyncNode {
 class _ResultNode extends Node {
   @override
   Future<dynamic> prep(Map<String, dynamic> sharedStorage) async {
-    return sharedStorage['results'][0]['result'];
+    return (sharedStorage['results'] as List<Map<String, dynamic>>)[0]
+        ['result'];
   }
 
   @override
@@ -119,7 +123,8 @@ class _ResultNode extends Node {
 class _AsyncResultNode extends AsyncNode {
   @override
   Future<dynamic> prep(Map<String, dynamic> sharedStorage) async {
-    return sharedStorage['results'][0]['result'];
+    return (sharedStorage['results'] as List<Map<String, dynamic>>)[0]
+        ['result'];
   }
 
   @override

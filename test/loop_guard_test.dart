@@ -48,8 +48,7 @@ void main() {
       final loopingNode = LoopingNode();
       loopingNode.next(loopingNode, action: 'loop'); // Self-loop
 
-      final flow = Flow();
-      flow.start(loopingNode);
+      final flow = Flow()..start(loopingNode);
 
       // Should throw StateError when maxSteps exceeded
       expect(
@@ -69,14 +68,14 @@ void main() {
       final countingNode = CountingNode();
       final endNode = EndNode();
 
-      countingNode.next(
-        countingNode,
-        action: 'continue',
-      ); // Self-loop for counting
-      countingNode.next(endNode, action: 'done'); // Exit condition
+      countingNode
+        ..next(
+          countingNode,
+          action: 'continue',
+        ) // Self-loop for counting
+        ..next(endNode, action: 'done'); // Exit condition
 
-      final flow = Flow();
-      flow.start(countingNode);
+      final flow = Flow()..start(countingNode);
 
       // Should complete without error (no maxSteps limit)
       final result = await flow.orch(<String, dynamic>{});
@@ -89,16 +88,17 @@ void main() {
       final countingNode = CountingNode();
       final endNode = EndNode();
 
-      countingNode.next(
-        countingNode,
-        action: 'continue',
-      ); // Self-loop for counting
-      countingNode.next(endNode, action: 'done'); // Exit condition
+      countingNode
+        ..next(
+          countingNode,
+          action: 'continue',
+        ) // Self-loop for counting
+        ..next(endNode, action: 'done'); // Exit condition
 
-      final flow = Flow();
-      flow.start(countingNode);
+      final flow = Flow()..start(countingNode);
 
-      // Should complete normally with maxSteps=10 (execution needs only 3 steps)
+      // Should complete normally with maxSteps=10
+      // (execution needs only 3 steps)
       final result = await flow.orch(
         <String, dynamic>{},
         null,
@@ -112,8 +112,7 @@ void main() {
       final loopingNode = LoopingNode();
       loopingNode.next(loopingNode, action: 'loop'); // Self-loop
 
-      final flow = AsyncFlow();
-      flow.start(loopingNode);
+      final flow = AsyncFlow()..start(loopingNode);
 
       // Should throw StateError when maxSteps exceeded
       expect(

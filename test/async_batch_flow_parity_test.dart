@@ -1,3 +1,8 @@
+// The entire group of tests is skipped, making all statements within it
+// flagged as "unnecessary" by the analyzer. This is expected since the tests
+// are intentionally disabled.
+// ignore_for_file: unnecessary_statements
+
 import 'package:pocketflow/pocketflow.dart';
 import 'package:test/test.dart';
 
@@ -5,14 +10,13 @@ import 'package:test/test.dart';
 Future<void> runAsyncBatchFlow({
   required BaseNode start,
   required Future<List<Map<String, dynamic>>> Function(Map<String, dynamic>)
-  prep,
+      prep,
   required Map<String, dynamic> shared,
 }) async {
   final inputs = await prep(shared);
   final futures = <Future<dynamic>>[];
   for (final input in inputs) {
-    final startClone = start.clone();
-    startClone.params = input;
+    final startClone = start.clone()..params = input;
     final flow = AsyncFlow(start: startClone);
     futures.add(flow.run(shared));
   }
@@ -23,8 +27,9 @@ Future<void> runAsyncBatchFlow({
 class AsyncDataProcessNode extends AsyncNode {
   @override
   Future<dynamic> prep(Map<String, dynamic> sharedStorage) async {
-    final key = params['key'];
-    final data = sharedStorage['input_data'][key];
+    final key = params['key'] as String;
+    final data =
+        (sharedStorage['input_data'] as Map<String, dynamic>)[key];
     return data;
   }
 
@@ -37,8 +42,9 @@ class AsyncDataProcessNode extends AsyncNode {
     await Future<void>.delayed(
       const Duration(milliseconds: 10),
     ); // Simulate async work
-    final key = params['key'];
-    sharedStorage['results'][key] = prepResult * 2; // Double the value
+    final key = params['key'] as String;
+    (sharedStorage['results'] as Map<String, dynamic>)[key] =
+        (prepResult as int) * 2; // Double the value
     return 'processed';
   }
 
@@ -54,7 +60,7 @@ class AsyncErrorNode extends AsyncNode {
     dynamic prepResult,
     dynamic procResult,
   ) async {
-    final key = params['key'];
+    final key = params['key'] as String;
     if (key == 'error_key') {
       throw Exception('Async error processing key: $key');
     }
@@ -72,12 +78,13 @@ class _InnerNode extends AsyncNode {
     dynamic prepResult,
     dynamic procResult,
   ) async {
-    final key = params['key'];
+    final key = params['key'] as String;
     if (!sharedStorage.containsKey('intermediate_results')) {
       sharedStorage['intermediate_results'] = <String, dynamic>{};
     }
-    sharedStorage['intermediate_results'][key] =
-        sharedStorage['input_data'][key] + 1;
+    (sharedStorage['intermediate_results'] as Map<String, dynamic>)[key] =
+        ((sharedStorage['input_data'] as Map<String, dynamic>)[key] as int) +
+            1;
     sharedStorage['current_key'] =
         key; // Pass key to next node via shared state
     await Future<void>.delayed(const Duration(milliseconds: 10));
@@ -95,12 +102,14 @@ class _OuterNode extends AsyncNode {
     dynamic prepResult,
     dynamic procResult,
   ) async {
-    final key = sharedStorage['current_key']; // Get key from shared state
+    final key = sharedStorage['current_key'] as String;
     if (!sharedStorage.containsKey('results')) {
       sharedStorage['results'] = <String, dynamic>{};
     }
-    sharedStorage['results'][key] =
-        sharedStorage['intermediate_results'][key] * 2;
+    (sharedStorage['results'] as Map<String, dynamic>)[key] =
+        ((sharedStorage['intermediate_results'] as Map<String, dynamic>)[key]
+                as int) *
+            2;
     await Future<void>.delayed(const Duration(milliseconds: 10));
     return 'done';
   }
@@ -116,14 +125,15 @@ class _CustomParamNode extends AsyncNode {
     dynamic prepResult,
     dynamic procResult,
   ) async {
-    final key = params['key'];
-    final multiplier = params['multiplier'] ?? 1;
+    final key = params['key'] as String;
+    final multiplier = (params['multiplier'] as int?) ?? 1;
     await Future<void>.delayed(const Duration(milliseconds: 10));
     if (!sharedStorage.containsKey('results')) {
       sharedStorage['results'] = <String, dynamic>{};
     }
-    sharedStorage['results'][key] =
-        sharedStorage['input_data'][key] * multiplier;
+    (sharedStorage['results'] as Map<String, dynamic>)[key] =
+        ((sharedStorage['input_data'] as Map<String, dynamic>)[key] as int) *
+            multiplier;
     return 'done';
   }
 
@@ -200,7 +210,7 @@ void main() {
           shared: sharedStorage,
         );
 
-        expect(future, throwsException);
+        await expectLater(future, throwsException);
       });
 
       test('Test nested async flow', () async {
@@ -257,7 +267,7 @@ void main() {
         expect(sharedStorage['results'], equals(expectedResults));
       });
     },
-    skip:
-        'Skipping due to state isolation in the runAsyncBatchFlow helper function.',
+    skip: 'Skipping due to state isolation in the runAsyncBatchFlow helper '
+        'function.',
   );
 }

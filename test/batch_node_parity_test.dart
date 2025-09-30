@@ -5,7 +5,6 @@ import 'package:test/test.dart';
 
 // A node that splits an array into chunks and sums each chunk.
 class ArrayChunkNode extends BatchNode<List<int>, int> {
-
   ArrayChunkNode({this.chunkSize = 10});
   final int chunkSize;
 
@@ -67,7 +66,10 @@ void main() {
       expect(results, equals([45, 145, 110]));
     });
 
-    Future<void> runMapReduceTest(List<int> array, {int chunkSize = 10}) async {
+    Future<void> runMapReduceTest(
+      List<int> array, {
+      int chunkSize = 10,
+    }) async {
       final expectedSum = array.isEmpty ? 0 : array.reduce((a, b) => a + b);
 
       final sharedStorage = <String, dynamic>{'input_array': array};
@@ -75,6 +77,10 @@ void main() {
       final chunkNode = ArrayChunkNode(chunkSize: chunkSize);
       final reduceNode = SumReduceNode();
 
+      // The `>>` operator is used for its side effects of building the flow
+      // graph. The analyzer doesn't recognize this and flags it as an
+      // unnecessary statement.
+      // ignore: unnecessary_statements
       chunkNode >> reduceNode;
 
       final pipeline = Flow(start: chunkNode);

@@ -5,12 +5,13 @@ import 'package:test/test.dart';
 class DataProcessNode extends Node {
   @override
   Future<void> prep(Map<String, dynamic> sharedStorage) async {
-    final key = params['key'];
-    final data = sharedStorage['input_data'][key];
+    final key = params['key'] as String;
+    final data =
+        (sharedStorage['input_data'] as Map<String, dynamic>)[key] as int;
     if (!sharedStorage.containsKey('results')) {
       sharedStorage['results'] = <String, dynamic>{};
     }
-    sharedStorage['results'][key] = data * 2;
+    (sharedStorage['results'] as Map<String, dynamic>)[key] = data * 2;
   }
 
   @override
@@ -21,14 +22,14 @@ class DataProcessNode extends Node {
 class ErrorProcessNode extends Node {
   @override
   Future<void> prep(Map<String, dynamic> sharedStorage) async {
-    final key = params['key'];
+    final key = params['key'] as String;
     if (key == 'error_key') {
       throw Exception('Error processing key: $key');
     }
     if (!sharedStorage.containsKey('results')) {
       sharedStorage['results'] = <String, dynamic>{};
     }
-    sharedStorage['results'][key] = true;
+    (sharedStorage['results'] as Map<String, dynamic>)[key] = true;
   }
 
   @override
@@ -38,13 +39,14 @@ class ErrorProcessNode extends Node {
 class _CustomParamNode extends Node {
   @override
   Future<void> prep(Map<String, dynamic> sharedStorage) async {
-    final key = params['key'];
-    final multiplier = params['multiplier'] ?? 1;
+    final key = params['key'] as String;
+    final multiplier = params['multiplier'] as int? ?? 1;
     if (!sharedStorage.containsKey('results')) {
       sharedStorage['results'] = <String, dynamic>{};
     }
-    sharedStorage['results'][key] =
-        sharedStorage['input_data'][key] * multiplier;
+    (sharedStorage['results'] as Map<String, dynamic>)[key] =
+        ((sharedStorage['input_data'] as Map<String, dynamic>)[key] as int) *
+            multiplier;
   }
 
   @override
@@ -59,8 +61,7 @@ Future<void> runBatchFlow({
 }) async {
   final inputs = prep(shared);
   for (final input in inputs) {
-    final startClone = start.clone();
-    startClone.params = input;
+    final startClone = start.clone()..params = input;
     final flow = Flow(start: startClone);
     await flow.run(shared);
   }
@@ -82,7 +83,8 @@ void main() {
 
       await runBatchFlow(
         start: processNode,
-        prep: (shared) => (shared['input_data'] as Map<String, dynamic>).keys
+        prep: (shared) => (shared['input_data'] as Map<String, dynamic>)
+            .keys
             .map<Map<String, dynamic>>((k) => {'key': k})
             .toList(),
         shared: sharedStorage,
@@ -97,7 +99,8 @@ void main() {
 
       await runBatchFlow(
         start: processNode,
-        prep: (shared) => (shared['input_data'] as Map<String, dynamic>).keys
+        prep: (shared) => (shared['input_data'] as Map<String, dynamic>)
+            .keys
             .map<Map<String, dynamic>>((k) => {'key': k})
             .toList(),
         shared: sharedStorage,
@@ -114,7 +117,8 @@ void main() {
 
       await runBatchFlow(
         start: processNode,
-        prep: (shared) => (shared['input_data'] as Map<String, dynamic>).keys
+        prep: (shared) => (shared['input_data'] as Map<String, dynamic>)
+            .keys
             .map<Map<String, dynamic>>((k) => {'key': k})
             .toList(),
         shared: sharedStorage,
@@ -132,7 +136,8 @@ void main() {
 
       final future = runBatchFlow(
         start: ErrorProcessNode(),
-        prep: (shared) => (shared['input_data'] as Map<String, dynamic>).keys
+        prep: (shared) => (shared['input_data'] as Map<String, dynamic>)
+            .keys
             .map<Map<String, dynamic>>((k) => {'key': k})
             .toList(),
         shared: sharedStorage,
@@ -143,13 +148,15 @@ void main() {
     test(
       'Nested flow',
       () async {
-        // TODO: This test is skipped because the Dart Flow implementation creates a
-        // shallow copy of the shared state for each run, which prevents state
-        // from being passed between nodes in the same way as the Python version.
-        // The `params` are also not propagated to subsequent nodes in the flow.
+        // TODO(jules): This test is skipped because the Dart Flow
+        // implementation creates a shallow copy of the shared state for each
+        // run, which prevents state from being passed between nodes in the
+        // same way as the Python version. The `params` are also not
+        // propagated to subsequent nodes in the flow.
       },
       skip:
-          'Skipping due to differences in state management between Dart and Python flows.',
+          'Skipping due to differences in state management between Dart and '
+          'Python flows.',
     );
 
     test('Custom parameters', () async {
@@ -163,8 +170,8 @@ void main() {
       await runBatchFlow(
         start: customParamNode,
         prep: (shared) {
-          final keys = (shared['input_data'] as Map<String, dynamic>).keys
-              .toList();
+          final keys =
+              (shared['input_data'] as Map<String, dynamic>).keys.toList();
           return [
             for (var i = 0; i < keys.length; i++)
               {'key': keys[i], 'multiplier': i + 2},

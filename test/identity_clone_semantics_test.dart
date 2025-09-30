@@ -11,9 +11,9 @@ class IdentityNode extends Node {
 
 void main() {
   test('Node clone should create distinct instances', () async {
-    final original = IdentityNode();
-    original.name = 'original';
-    original.params['test'] = 'value';
+    final original = IdentityNode()
+      ..name = 'original'
+      ..params['test'] = 'value';
 
     final cloned = original.clone();
 
@@ -25,24 +25,23 @@ void main() {
     expect(cloned.params['test'], equals('value'));
 
     // Should be independent
-    cloned.name = 'cloned';
-    cloned.params['test'] = 'new_value';
+    cloned
+      ..name = 'cloned'
+      ..params['test'] = 'new_value';
 
     expect(original.name, equals('original'));
     expect(original.params['test'], equals('value'));
   });
 
   test('Flow clone should create deep copy', () async {
-    final node1 = IdentityNode();
-    node1.name = 'node1';
+    final node1 = IdentityNode()..name = 'node1';
 
-    final node2 = IdentityNode();
-    node2.name = 'node2';
+    final node2 = IdentityNode()..name = 'node2';
 
-    final originalFlow = Flow();
-    originalFlow.start(node1);
-    originalFlow.next(node2);
-    originalFlow.params['flow_param'] = 'flow_value';
+    final originalFlow = Flow()
+      ..start(node1)
+      ..next(node2)
+      ..params['flow_param'] = 'flow_value';
 
     final clonedFlow = originalFlow.clone();
 
@@ -61,9 +60,9 @@ void main() {
     final node1 = IdentityNode();
     final node2 = IdentityNode();
 
-    final flow = Flow();
-    flow.start(node1);
-    flow.next(node2);
+    final flow = Flow()
+      ..start(node1)
+      ..next(node2);
 
     final clonedFlow = flow.clone();
 
@@ -79,3 +78,4 @@ void main() {
     expect(result2, isNull);
   });
 }
+// End of file

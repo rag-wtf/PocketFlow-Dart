@@ -3,9 +3,9 @@ import 'dart:math';
 import 'package:pocketflow/pocketflow.dart';
 import 'package:test/test.dart';
 
-// A node that splits an array into chunks and processes them asynchronously in parallel.
+// A node that splits an array into chunks and processes them asynchronously
+// in parallel.
 class AsyncArrayChunkNode extends AsyncParallelBatchNode<List<int>, int> {
-
   AsyncArrayChunkNode({this.chunkSize = 10}) : super(_execChunk);
   final int chunkSize;
 
@@ -48,6 +48,7 @@ class AsyncArrayChunkNode extends AsyncParallelBatchNode<List<int>, int> {
   }
 }
 
+/*
 // A node that sums the results of the chunk processing.
 class AsyncSumReduceNode extends AsyncNode {
   @override
@@ -66,6 +67,7 @@ class AsyncSumReduceNode extends AsyncNode {
     return AsyncSumReduceNode();
   }
 }
+*/
 
 void main() {
   group('AsyncBatchNode Parity Tests', () {
@@ -85,9 +87,10 @@ void main() {
     test(
       'Async map-reduce sum',
       () async {
-        // TODO: This test is skipped because the Dart Flow implementation does not
-        // call the `prep` method of an AsyncParallelBatchNode when it's the start
-        // of a flow. This prevents the `items` from being prepared correctly.
+        // TODO(jules): This test is skipped because the Dart Flow
+        // implementation does not call the `prep` method of an
+        // AsyncParallelBatchNode when it's the start of a flow. This prevents
+        // the `items` from being prepared correctly.
       },
       skip:
           'Skipping because Flow does not call prep on AsyncParallelBatchNode.',
@@ -96,9 +99,10 @@ void main() {
     test(
       'Uneven chunks',
       () async {
-        // TODO: This test is skipped because the Dart Flow implementation does not
-        // call the `prep` method of an AsyncParallelBatchNode when it's the start
-        // of a flow. This prevents the `items` from being prepared correctly.
+        // TODO(jules): This test is skipped because the Dart Flow
+        // implementation does not call the `prep` method of an
+        // AsyncParallelBatchNode when it's the start of a flow. This prevents
+        // the `items` from being prepared correctly.
       },
       skip:
           'Skipping because Flow does not call prep on AsyncParallelBatchNode.',
@@ -107,9 +111,10 @@ void main() {
     test(
       'Custom chunk size',
       () async {
-        // TODO: This test is skipped because the Dart Flow implementation does not
-        // call the `prep` method of an AsyncParallelBatchNode when it's the start
-        // of a flow. This prevents the `items` from being prepared correctly.
+        // TODO(jules): This test is skipped because the Dart Flow
+        // implementation does not call the `prep` method of an
+        // AsyncParallelBatchNode when it's the start of a flow. This prevents
+        // the `items` from being prepared correctly.
       },
       skip:
           'Skipping because Flow does not call prep on AsyncParallelBatchNode.',
@@ -118,9 +123,10 @@ void main() {
     test(
       'Single element chunks',
       () async {
-        // TODO: This test is skipped because the Dart Flow implementation does not
-        // call the `prep` method of an AsyncParallelBatchNode when it's the start
-        // of a flow. This prevents the `items` from being prepared correctly.
+        // TODO(jules): This test is skipped because the Dart Flow
+        // implementation does not call the `prep` method of an
+        // AsyncParallelBatchNode when it's the start of a flow. This prevents
+        // the `items` from being prepared correctly.
       },
       skip:
           'Skipping because Flow does not call prep on AsyncParallelBatchNode.',
@@ -129,9 +135,10 @@ void main() {
     test(
       'Empty array',
       () async {
-        // TODO: This test is skipped because the Dart Flow implementation does not
-        // call the `prep` method of an AsyncParallelBatchNode when it's the start
-        // of a flow. This prevents the `items` from being prepared correctly.
+        // TODO(jules): This test is skipped because the Dart Flow
+        // implementation does not call the `prep` method of an
+        // AsyncParallelBatchNode when it's the start of a flow. This prevents
+        // the `items` from being prepared correctly.
       },
       skip:
           'Skipping because Flow does not call prep on AsyncParallelBatchNode.',
@@ -145,10 +152,11 @@ void main() {
         }
         return item;
       }
-      final errorNode = AsyncParallelBatchNode<int, int>(exec);
-      errorNode.params = {
-        'items': [1, 2, 3],
-      };
+
+      final errorNode = AsyncParallelBatchNode<int, int>(exec)
+        ..params = {
+          'items': [1, 2, 3],
+        };
 
       final sharedStorage = <String, dynamic>{};
 

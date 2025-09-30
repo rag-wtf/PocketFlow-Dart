@@ -1,3 +1,8 @@
+// The `>>` and `-` operators are used for their side effects of building the
+// flow graph. The analyzer doesn't recognize this and flags them as
+// unnecessary statements.
+// ignore_for_file: unnecessary_statements
+
 import 'package:pocketflow/pocketflow.dart';
 import 'package:test/test.dart';
 
