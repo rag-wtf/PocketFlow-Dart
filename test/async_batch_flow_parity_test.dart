@@ -1,63 +1,48 @@
-// The entire group of tests is skipped, making all statements within it
-// flagged as "unnecessary" by the analyzer. This is expected since the tests
-// are intentionally disabled.
-// ignore_for_file: unnecessary_statements
+// Tests for AsyncBatchFlow parity with Python implementation
+// These tests verify that Dart's AsyncBatchFlow matches Python's behavior
+// of running the flow multiple times with different parameters.
 
 import 'package:pocketflow/pocketflow.dart';
 import 'package:test/test.dart';
 
-// Helper to simulate Python's AsyncBatchFlow behavior for parity testing.
-Future<void> runAsyncBatchFlow({
-  required BaseNode start,
-  required Future<List<Map<String, dynamic>>> Function(Map<String, dynamic>)
-  prep,
-  required Map<String, dynamic> shared,
-}) async {
-  final inputs = await prep(shared);
-  final futures = <Future<dynamic>>[];
-  for (final input in inputs) {
-    final startClone = start.clone()..params = input;
-    final flow = AsyncFlow(start: startClone);
-    futures.add(flow.run(shared));
-  }
-  await Future.wait(futures);
-}
-
-// Node that processes data asynchronously
+// Test node that processes data based on params
 class AsyncDataProcessNode extends AsyncNode {
   @override
-  Future<dynamic> prep(Map<String, dynamic> sharedStorage) async {
+  Future<dynamic> prepAsync(Map<String, dynamic> shared) async {
     final key = params['key'] as String;
-    final data = (sharedStorage['input_data'] as Map<String, dynamic>)[key];
+    final data = (shared['input_data'] as Map<String, dynamic>)[key];
+    if (!shared.containsKey('results')) {
+      shared['results'] = <String, dynamic>{};
+    }
+    (shared['results'] as Map<String, dynamic>)[key] = data;
     return data;
   }
 
   @override
-  Future<String> post(
-    Map<String, dynamic> sharedStorage,
+  Future<dynamic> postAsync(
+    Map<String, dynamic> shared,
     dynamic prepResult,
-    dynamic procResult,
+    dynamic execResult,
   ) async {
-    await Future<void>.delayed(
-      const Duration(milliseconds: 10),
-    ); // Simulate async work
+    await Future<void>.delayed(const Duration(milliseconds: 10));
     final key = params['key'] as String;
-    (sharedStorage['results'] as Map<String, dynamic>)[key] =
-        (prepResult as int) * 2; // Double the value
+    (shared['results'] as Map<String, dynamic>)[key] = (prepResult as int) * 2;
     return 'processed';
   }
 
   @override
-  BaseNode createInstance() => AsyncDataProcessNode();
+  BaseNode createInstance() {
+    return AsyncDataProcessNode();
+  }
 }
 
-// Node that throws an error for a specific key
+// Test node that throws errors for specific keys
 class AsyncErrorNode extends AsyncNode {
   @override
-  Future<String> post(
-    Map<String, dynamic> sharedStorage,
+  Future<dynamic> postAsync(
+    Map<String, dynamic> shared,
     dynamic prepResult,
-    dynamic procResult,
+    dynamic execResult,
   ) async {
     final key = params['key'] as String;
     if (key == 'error_key') {
@@ -67,206 +52,260 @@ class AsyncErrorNode extends AsyncNode {
   }
 
   @override
-  BaseNode createInstance() => AsyncErrorNode();
+  BaseNode createInstance() {
+    return AsyncErrorNode();
+  }
 }
 
-class _InnerNode extends AsyncNode {
+// Inner node for nested flow test
+class AsyncInnerNode extends AsyncNode {
   @override
-  Future<String> post(
-    Map<String, dynamic> sharedStorage,
+  Future<dynamic> postAsync(
+    Map<String, dynamic> shared,
     dynamic prepResult,
-    dynamic procResult,
+    dynamic execResult,
   ) async {
     final key = params['key'] as String;
-    if (!sharedStorage.containsKey('intermediate_results')) {
-      sharedStorage['intermediate_results'] = <String, dynamic>{};
+    if (!shared.containsKey('intermediate_results')) {
+      shared['intermediate_results'] = <String, dynamic>{};
     }
-    (sharedStorage['intermediate_results'] as Map<String, dynamic>)[key] =
-        ((sharedStorage['input_data'] as Map<String, dynamic>)[key] as int) + 1;
-    sharedStorage['current_key'] =
-        key; // Pass key to next node via shared state
+    final inputData = shared['input_data'] as Map<String, dynamic>;
+    (shared['intermediate_results'] as Map<String, dynamic>)[key] =
+        (inputData[key] as int) + 1;
     await Future<void>.delayed(const Duration(milliseconds: 10));
     return 'next';
   }
 
   @override
-  BaseNode createInstance() => _InnerNode();
-}
-
-class _OuterNode extends AsyncNode {
-  @override
-  Future<String> post(
-    Map<String, dynamic> sharedStorage,
-    dynamic prepResult,
-    dynamic procResult,
-  ) async {
-    final key = sharedStorage['current_key'] as String;
-    if (!sharedStorage.containsKey('results')) {
-      sharedStorage['results'] = <String, dynamic>{};
-    }
-    (sharedStorage['results'] as Map<String, dynamic>)[key] =
-        ((sharedStorage['intermediate_results'] as Map<String, dynamic>)[key]
-            as int) *
-        2;
-    await Future<void>.delayed(const Duration(milliseconds: 10));
-    return 'done';
+  BaseNode createInstance() {
+    return AsyncInnerNode();
   }
-
-  @override
-  BaseNode createInstance() => _OuterNode();
 }
 
-class _CustomParamNode extends AsyncNode {
+// Outer node for nested flow test
+class AsyncOuterNode extends AsyncNode {
   @override
-  Future<String> post(
-    Map<String, dynamic> sharedStorage,
+  Future<dynamic> postAsync(
+    Map<String, dynamic> shared,
     dynamic prepResult,
-    dynamic procResult,
+    dynamic execResult,
   ) async {
     final key = params['key'] as String;
-    final multiplier = (params['multiplier'] as int?) ?? 1;
-    await Future<void>.delayed(const Duration(milliseconds: 10));
-    if (!sharedStorage.containsKey('results')) {
-      sharedStorage['results'] = <String, dynamic>{};
+    if (!shared.containsKey('results')) {
+      shared['results'] = <String, dynamic>{};
     }
-    (sharedStorage['results'] as Map<String, dynamic>)[key] =
-        ((sharedStorage['input_data'] as Map<String, dynamic>)[key] as int) *
-        multiplier;
+    final intermediateResults =
+        shared['intermediate_results'] as Map<String, dynamic>;
+    (shared['results'] as Map<String, dynamic>)[key] =
+        (intermediateResults[key] as int) * 2;
+    await Future<void>.delayed(const Duration(milliseconds: 10));
     return 'done';
   }
 
   @override
-  BaseNode createInstance() => _CustomParamNode();
+  BaseNode createInstance() {
+    return AsyncOuterNode();
+  }
+}
+
+// Custom param node for testing parameter merging
+class CustomParamAsyncNode extends AsyncNode {
+  @override
+  Future<dynamic> postAsync(
+    Map<String, dynamic> shared,
+    dynamic prepResult,
+    dynamic execResult,
+  ) async {
+    final key = params['key'] as String;
+    final multiplier = params['multiplier'] as int? ?? 1;
+    await Future<void>.delayed(const Duration(milliseconds: 10));
+    if (!shared.containsKey('results')) {
+      shared['results'] = <String, dynamic>{};
+    }
+    final inputData = shared['input_data'] as Map<String, dynamic>;
+    (shared['results'] as Map<String, dynamic>)[key] =
+        (inputData[key] as int) * multiplier;
+    return 'done';
+  }
+
+  @override
+  BaseNode createInstance() {
+    return CustomParamAsyncNode();
+  }
 }
 
 void main() {
-  group(
-    'AsyncBatchFlow Parity Tests',
-    () {
-      late AsyncDataProcessNode processNode;
+  group('AsyncBatchFlow Parity Tests', () {
+    test('basic async batch processing with multiple keys', () async {
+      final flow = _SimpleTestAsyncBatchFlow(
+        start: AsyncDataProcessNode(),
+      );
 
-      setUp(() {
-        processNode = AsyncDataProcessNode();
-      });
+      final shared = <String, dynamic>{
+        'input_data': {
+          'a': 1,
+          'b': 2,
+          'c': 3,
+        },
+      };
 
-      test('Test basic async batch processing', () async {
-        final sharedStorage = {
-          'input_data': {'a': 1, 'b': 2, 'c': 3},
-          'results': <String, dynamic>{},
-        };
+      await flow.runAsync(shared);
 
-        await runAsyncBatchFlow(
-          start: processNode,
-          prep: (sharedStorage) async {
-            final keys =
-                (sharedStorage['input_data'] as Map<String, dynamic>).keys;
-            return [
-              for (final k in keys) {'key': k},
-            ];
-          },
-          shared: sharedStorage,
-        );
+      final expectedResults = {
+        'a': 2, // 1 * 2
+        'b': 4, // 2 * 2
+        'c': 6, // 3 * 2
+      };
+      expect(shared['results'], equals(expectedResults));
+    });
 
-        final expectedResults = {'a': 2, 'b': 4, 'c': 6};
-        expect(sharedStorage['results'], equals(expectedResults));
-      });
+    test('empty async batch', () async {
+      final flow = _EmptyTestAsyncBatchFlow(
+        start: AsyncDataProcessNode(),
+      );
 
-      test('Test empty async batch', () async {
-        final sharedStorage = {
-          'input_data': <String, dynamic>{},
-        };
+      final shared = <String, dynamic>{
+        'input_data': <String, dynamic>{},
+      };
 
-        await runAsyncBatchFlow(
-          start: processNode,
-          prep: (sharedStorage) async {
-            final keys =
-                (sharedStorage['input_data'] as Map<String, dynamic>).keys;
-            return [
-              for (final k in keys) {'key': k},
-            ];
-          },
-          shared: sharedStorage,
-        );
+      await flow.runAsync(shared);
 
-        expect(sharedStorage['results'], isNull);
-      });
+      expect(shared['results'] ?? <String, dynamic>{}, equals({}));
+    });
 
-      test('Test async error handling', () async {
-        final sharedStorage = {
-          'input_data': {'normal_key': 1, 'error_key': 2, 'another_key': 3},
-        };
+    test('async error handling', () async {
+      final flow = _ErrorTestAsyncBatchFlow(
+        start: AsyncErrorNode(),
+      );
 
-        final future = runAsyncBatchFlow(
-          start: AsyncErrorNode(),
-          prep: (sharedStorage) async {
-            final keys =
-                (sharedStorage['input_data'] as Map<String, dynamic>).keys;
-            return [
-              for (final k in keys) {'key': k},
-            ];
-          },
-          shared: sharedStorage,
-        );
+      final shared = <String, dynamic>{
+        'input_data': {
+          'normal_key': 1,
+          'error_key': 2,
+          'another_key': 3,
+        },
+      };
 
-        await expectLater(future, throwsException);
-      });
+      expect(
+        () => flow.runAsync(shared),
+        throwsA(isA<Exception>()),
+      );
+    });
 
-      test('Test nested async flow', () async {
-        final innerNode = _InnerNode();
-        final outerNode = _OuterNode();
+    test('nested async flow', () async {
+      final innerNode = AsyncInnerNode();
+      final outerNode = AsyncOuterNode();
+      // Connect innerNode to outerNode with 'next' action
+      innerNode.next(outerNode, action: 'next');
 
-        innerNode - 'next' >> outerNode;
+      final flow = _NestedAsyncBatchFlow(start: innerNode);
 
-        final sharedStorage = {
-          'input_data': {'x': 1, 'y': 2},
-          'intermediate_results': <String, dynamic>{},
-          'results': <String, dynamic>{},
-        };
+      final shared = <String, dynamic>{
+        'input_data': {
+          'x': 1,
+          'y': 2,
+        },
+      };
 
-        await runAsyncBatchFlow(
-          start: innerNode,
-          prep: (sharedStorage) async {
-            final keys =
-                (sharedStorage['input_data'] as Map<String, dynamic>).keys;
-            return [
-              for (final k in keys) {'key': k},
-            ];
-          },
-          shared: sharedStorage,
-        );
+      await flow.runAsync(shared);
 
-        final expectedResults = {'x': 4, 'y': 6};
-        expect(sharedStorage['results'], equals(expectedResults));
-      });
+      final expectedResults = {
+        'x': 4, // (1 + 1) * 2
+        'y': 6, // (2 + 1) * 2
+      };
+      expect(shared['results'], equals(expectedResults));
+    });
 
-      test('Test custom async parameters', () async {
-        final customParamNode = _CustomParamNode();
+    test('custom async parameters', () async {
+      final flow = _CustomParamAsyncBatchFlow(
+        start: CustomParamAsyncNode(),
+      );
 
-        final sharedStorage = {
-          'input_data': {'a': 1, 'b': 2, 'c': 3},
-          'results': <String, dynamic>{},
-        };
+      final shared = <String, dynamic>{
+        'input_data': {
+          'a': 1,
+          'b': 2,
+          'c': 3,
+        },
+      };
 
-        await runAsyncBatchFlow(
-          start: customParamNode,
-          prep: (sharedStorage) async {
-            final keys = (sharedStorage['input_data'] as Map<String, dynamic>)
-                .keys
-                .toList();
-            return [
-              for (var i = 0; i < keys.length; i++)
-                {'key': keys[i], 'multiplier': i + 1},
-            ];
-          },
-          shared: sharedStorage,
-        );
+      await flow.runAsync(shared);
 
-        final expectedResults = {'a': 1, 'b': 4, 'c': 9};
-        expect(sharedStorage['results'], equals(expectedResults));
-      });
-    },
-    skip:
-        'Skipping due to state isolation in the runAsyncBatchFlow helper '
-        'function.',
-  );
+      final expectedResults = {
+        'a': 1 * 1, // first item, multiplier = 1
+        'b': 2 * 2, // second item, multiplier = 2
+        'c': 3 * 3, // third item, multiplier = 3
+      };
+      expect(shared['results'], equals(expectedResults));
+    });
+  });
+}
+
+// Helper classes for testing
+
+class _SimpleTestAsyncBatchFlow extends AsyncBatchFlow {
+  _SimpleTestAsyncBatchFlow({super.start});
+
+  @override
+  Future<List<Map<String, dynamic>>> prepAsync(
+    Map<String, dynamic> shared,
+  ) async {
+    final inputData = shared['input_data'] as Map<String, dynamic>;
+    return inputData.keys.map((k) => {'key': k}).toList();
+  }
+}
+
+class _EmptyTestAsyncBatchFlow extends AsyncBatchFlow {
+  _EmptyTestAsyncBatchFlow({super.start});
+
+  @override
+  Future<List<Map<String, dynamic>>> prepAsync(
+    Map<String, dynamic> shared,
+  ) async {
+    final inputData = shared['input_data'] as Map<String, dynamic>;
+    return inputData.keys.map((k) => {'key': k}).toList();
+  }
+}
+
+class _ErrorTestAsyncBatchFlow extends AsyncBatchFlow {
+  _ErrorTestAsyncBatchFlow({super.start});
+
+  @override
+  Future<List<Map<String, dynamic>>> prepAsync(
+    Map<String, dynamic> shared,
+  ) async {
+    final inputData = shared['input_data'] as Map<String, dynamic>;
+    return inputData.keys.map((k) => {'key': k}).toList();
+  }
+}
+
+class _NestedAsyncBatchFlow extends AsyncBatchFlow {
+  _NestedAsyncBatchFlow({super.start});
+
+  @override
+  Future<List<Map<String, dynamic>>> prepAsync(
+    Map<String, dynamic> shared,
+  ) async {
+    final inputData = shared['input_data'] as Map<String, dynamic>;
+    return inputData.keys.map((k) => {'key': k}).toList();
+  }
+}
+
+class _CustomParamAsyncBatchFlow extends AsyncBatchFlow {
+  _CustomParamAsyncBatchFlow({super.start});
+
+  @override
+  Future<List<Map<String, dynamic>>> prepAsync(
+    Map<String, dynamic> shared,
+  ) async {
+    final inputData = shared['input_data'] as Map<String, dynamic>;
+    var i = 0;
+    return inputData.keys.map((k) {
+      i++;
+      return {
+        'key': k,
+        'multiplier': i,
+      };
+    }).toList();
+  }
 }

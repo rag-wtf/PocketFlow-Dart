@@ -57,14 +57,14 @@ class AsyncFallbackNode extends AsyncNode {
   int attemptCount = 0;
 
   @override
-  Future<void> prep(Map<String, dynamic> sharedStorage) async {
+  Future<void> prepAsync(Map<String, dynamic> sharedStorage) async {
     if (!sharedStorage.containsKey('results')) {
       sharedStorage['results'] = <Map<String, dynamic>>[];
     }
   }
 
   @override
-  Future<dynamic> exec(dynamic prepResult) async {
+  Future<dynamic> execAsync(dynamic prepResult) async {
     attemptCount++;
     if (shouldFail) {
       throw Exception('Intentional async failure');
@@ -73,13 +73,13 @@ class AsyncFallbackNode extends AsyncNode {
   }
 
   @override
-  Future<dynamic> execFallback(dynamic prepResult, Exception exc) async {
+  Future<dynamic> execFallbackAsync(dynamic prepResult, Exception exc) async {
     await Future<void>.delayed(const Duration(milliseconds: 10));
     return 'async_fallback';
   }
 
   @override
-  Future<void> post(
+  Future<void> postAsync(
     Map<String, dynamic> sharedStorage,
     dynamic prepResult,
     dynamic execResult,
@@ -122,18 +122,18 @@ class _ResultNode extends Node {
 
 class _AsyncResultNode extends AsyncNode {
   @override
-  Future<dynamic> prep(Map<String, dynamic> sharedStorage) async {
+  Future<dynamic> prepAsync(Map<String, dynamic> sharedStorage) async {
     return (sharedStorage['results']
         as List<Map<String, dynamic>>)[0]['result'];
   }
 
   @override
-  Future<dynamic> exec(dynamic prepResult) async {
+  Future<dynamic> execAsync(dynamic prepResult) async {
     return prepResult;
   }
 
   @override
-  Future<void> post(
+  Future<void> postAsync(
     Map<String, dynamic> sharedStorage,
     dynamic prepResult,
     dynamic execResult,
@@ -157,7 +157,7 @@ class _NoFallbackNode extends Node {
 
 class _NoFallbackAsyncNode extends AsyncNode {
   @override
-  Future<dynamic> exec(dynamic prepResult) async {
+  Future<dynamic> execAsync(dynamic prepResult) async {
     throw Exception('Test error');
   }
 
@@ -277,6 +277,5 @@ void main() {
         expect(results[0]['result'], 'async_fallback');
       });
     },
-    skip: 'Skipping due to fundamental state management issues in AsyncFlow.',
   );
 }

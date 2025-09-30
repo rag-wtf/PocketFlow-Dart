@@ -1,15 +1,32 @@
 import 'dart:math';
 
+// The `>>` operator is used for its side effects of building the flow graph.
+// The analyzer doesn't recognize this and flags it as an unnecessary statement.
+// ignore_for_file: unnecessary_statements
+
 import 'package:pocketflow/pocketflow.dart';
 import 'package:test/test.dart';
 
 // A node that splits an array into chunks and processes them asynchronously
-// in parallel.
+// in parallel. This now properly extends AsyncParallelBatchNode to match
+// Python's behavior.
 class AsyncArrayChunkNode extends AsyncParallelBatchNode<List<int>, int> {
-  AsyncArrayChunkNode({this.chunkSize = 10}) : super(_execChunk);
+  AsyncArrayChunkNode({this.chunkSize = 10});
   final int chunkSize;
 
-  static Future<int> _execChunk(List<int> chunk) async {
+  @override
+  Future<List<List<int>>> prepAsync(Map<String, dynamic> sharedStorage) async {
+    final array = sharedStorage['input_array'] as List<int>? ?? [];
+    final chunks = <List<int>>[];
+    for (var i = 0; i < array.length; i += chunkSize) {
+      final end = min(i + chunkSize, array.length);
+      chunks.add(array.sublist(i, end));
+    }
+    return chunks;
+  }
+
+  @override
+  Future<int> execAsyncItem(List<int> chunk) async {
     await Future<void>.delayed(
       const Duration(milliseconds: 1),
     ); // Simulate async work
@@ -20,20 +37,7 @@ class AsyncArrayChunkNode extends AsyncParallelBatchNode<List<int>, int> {
   }
 
   @override
-  Future<List<List<int>>> prep(Map<String, dynamic> sharedStorage) async {
-    final array = sharedStorage['input_array'] as List<int>? ?? [];
-    final chunks = <List<int>>[];
-    for (var i = 0; i < array.length; i += chunkSize) {
-      final end = min(i + chunkSize, array.length);
-      chunks.add(array.sublist(i, end));
-    }
-    // The base class expects the list of items to process in the 'items' key.
-    sharedStorage['items'] = chunks;
-    return chunks;
-  }
-
-  @override
-  Future<dynamic> post(
+  Future<dynamic> postAsync(
     Map<String, dynamic> sharedStorage,
     dynamic prepResult,
     dynamic procResult,
@@ -48,11 +52,10 @@ class AsyncArrayChunkNode extends AsyncParallelBatchNode<List<int>, int> {
   }
 }
 
-/*
 // A node that sums the results of the chunk processing.
 class AsyncSumReduceNode extends AsyncNode {
   @override
-  Future<dynamic> prep(Map<String, dynamic> sharedStorage) async {
+  Future<dynamic> prepAsync(Map<String, dynamic> sharedStorage) async {
     final chunkResults = sharedStorage['chunk_results'] as List<int>? ?? [];
     await Future<void>.delayed(
       const Duration(milliseconds: 10),
@@ -67,7 +70,6 @@ class AsyncSumReduceNode extends AsyncNode {
     return AsyncSumReduceNode();
   }
 }
-*/
 
 void main() {
   group('AsyncBatchNode Parity Tests', () {
@@ -84,83 +86,134 @@ void main() {
       expect(results, equals([45, 145, 110]));
     });
 
-    test(
-      'Async map-reduce sum',
-      () async {
-        // TODO(jules): This test is skipped because the Dart Flow
-        // implementation does not call the `prep` method of an
-        // AsyncParallelBatchNode when it's the start of a flow. This prevents
-        // the `items` from being prepared correctly.
-      },
-      skip:
-          'Skipping because Flow does not call prep on AsyncParallelBatchNode.',
-    );
+    test('Async map-reduce sum', () async {
+      // Test a complete async map-reduce pipeline that sums a large array:
+      // 1. Map: Split array into chunks and sum each chunk asynchronously
+      // 2. Reduce: Sum all the chunk sums asynchronously
+      final array = List<int>.generate(100, (i) => i);
+      final expectedSum = array.fold<int>(0, (sum, item) => sum + item); // 4950
 
-    test(
-      'Uneven chunks',
-      () async {
-        // TODO(jules): This test is skipped because the Dart Flow
-        // implementation does not call the `prep` method of an
-        // AsyncParallelBatchNode when it's the start of a flow. This prevents
-        // the `items` from being prepared correctly.
-      },
-      skip:
-          'Skipping because Flow does not call prep on AsyncParallelBatchNode.',
-    );
+      final sharedStorage = <String, dynamic>{
+        'input_array': array,
+      };
 
-    test(
-      'Custom chunk size',
-      () async {
-        // TODO(jules): This test is skipped because the Dart Flow
-        // implementation does not call the `prep` method of an
-        // AsyncParallelBatchNode when it's the start of a flow. This prevents
-        // the `items` from being prepared correctly.
-      },
-      skip:
-          'Skipping because Flow does not call prep on AsyncParallelBatchNode.',
-    );
+      // Create nodes
+      final chunkNode = AsyncArrayChunkNode();
+      final reduceNode = AsyncSumReduceNode();
 
-    test(
-      'Single element chunks',
-      () async {
-        // TODO(jules): This test is skipped because the Dart Flow
-        // implementation does not call the `prep` method of an
-        // AsyncParallelBatchNode when it's the start of a flow. This prevents
-        // the `items` from being prepared correctly.
-      },
-      skip:
-          'Skipping because Flow does not call prep on AsyncParallelBatchNode.',
-    );
+      // Connect nodes
+      chunkNode - 'processed' >> reduceNode;
 
-    test(
-      'Empty array',
-      () async {
-        // TODO(jules): This test is skipped because the Dart Flow
-        // implementation does not call the `prep` method of an
-        // AsyncParallelBatchNode when it's the start of a flow. This prevents
-        // the `items` from being prepared correctly.
-      },
-      skip:
-          'Skipping because Flow does not call prep on AsyncParallelBatchNode.',
-    );
+      // Create and run pipeline
+      final pipeline = AsyncFlow(start: chunkNode);
+      await pipeline.run(sharedStorage);
+
+      expect(sharedStorage['total'], equals(expectedSum));
+    });
+
+    test('Uneven chunks', () async {
+      // Test that the async map-reduce works correctly with array lengths
+      // that don't divide evenly by chunk_size
+      final array = List<int>.generate(25, (i) => i);
+      final expectedSum = array.fold<int>(0, (sum, item) => sum + item); // 300
+
+      final sharedStorage = <String, dynamic>{
+        'input_array': array,
+      };
+
+      final chunkNode = AsyncArrayChunkNode();
+      final reduceNode = AsyncSumReduceNode();
+
+      chunkNode - 'processed' >> reduceNode;
+      final pipeline = AsyncFlow(start: chunkNode);
+      await pipeline.run(sharedStorage);
+
+      expect(sharedStorage['total'], equals(expectedSum));
+    });
+
+    test('Custom chunk size', () async {
+      // Test that the async map-reduce works with different chunk sizes
+      final array = List<int>.generate(100, (i) => i);
+      final expectedSum = array.fold<int>(0, (sum, item) => sum + item);
+
+      final sharedStorage = <String, dynamic>{
+        'input_array': array,
+      };
+
+      // Use chunk_size=15 instead of default 10
+      final chunkNode = AsyncArrayChunkNode(chunkSize: 15);
+      final reduceNode = AsyncSumReduceNode();
+
+      chunkNode - 'processed' >> reduceNode;
+      final pipeline = AsyncFlow(start: chunkNode);
+      await pipeline.run(sharedStorage);
+
+      expect(sharedStorage['total'], equals(expectedSum));
+    });
+
+    test('Single element chunks', () async {
+      // Test extreme case where chunk_size=1
+      final array = List<int>.generate(5, (i) => i);
+      final expectedSum = array.fold<int>(0, (sum, item) => sum + item);
+
+      final sharedStorage = <String, dynamic>{
+        'input_array': array,
+      };
+
+      final chunkNode = AsyncArrayChunkNode(chunkSize: 1);
+      final reduceNode = AsyncSumReduceNode();
+
+      chunkNode - 'processed' >> reduceNode;
+      final pipeline = AsyncFlow(start: chunkNode);
+      await pipeline.run(sharedStorage);
+
+      expect(sharedStorage['total'], equals(expectedSum));
+    });
+
+    test('Empty array', () async {
+      // Test edge case of empty input array
+      final sharedStorage = <String, dynamic>{
+        'input_array': <int>[],
+      };
+
+      final chunkNode = AsyncArrayChunkNode();
+      final reduceNode = AsyncSumReduceNode();
+
+      chunkNode - 'processed' >> reduceNode;
+      final pipeline = AsyncFlow(start: chunkNode);
+      await pipeline.run(sharedStorage);
+
+      expect(sharedStorage['total'], equals(0));
+    });
 
     test('Error handling', () async {
-      // A node that throws an error for a specific item.
-      Future<int> exec(int item) async {
-        if (item == 2) {
-          throw Exception('Error processing item 2');
-        }
-        return item;
-      }
+      // Test error handling in async batch processing
+      // This matches Python's test_error_handling (commented out in Python)
+      final sharedStorage = <String, dynamic>{
+        'input_array': [1, 2, 3],
+      };
 
-      final errorNode = AsyncParallelBatchNode<int, int>(exec)
-        ..params = {
-          'items': [1, 2, 3],
-        };
-
-      final sharedStorage = <String, dynamic>{};
-
+      final errorNode = _ErrorAsyncBatchNode();
       expect(() => errorNode.run(sharedStorage), throwsException);
     });
   });
+}
+
+// Error node for testing error handling
+class _ErrorAsyncBatchNode extends AsyncBatchNode<int, int> {
+  @override
+  Future<List<int>> prepAsync(Map<String, dynamic> sharedStorage) async {
+    return sharedStorage['input_array'] as List<int>;
+  }
+
+  @override
+  Future<int> execAsyncItem(int item) async {
+    if (item == 2) {
+      throw Exception('Error processing item 2');
+    }
+    return item;
+  }
+
+  @override
+  BaseNode createInstance() => _ErrorAsyncBatchNode();
 }

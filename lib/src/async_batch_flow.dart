@@ -1,69 +1,76 @@
 import 'dart:async';
 
 import 'package:pocketflow/src/async_flow.dart';
-import 'package:pocketflow/src/base_node.dart';
 
-/// A flow that processes a batch of items sequentially through a series of
-/// asynchronous nodes.
+/// An asynchronous batch flow that runs the flow multiple times with different
+/// parameters.
 ///
-/// `AsyncBatchFlow` is designed for scenarios where a collection of items needs
-/// to be processed in a pipeline fashion. Each node in the flow receives the
-/// batch of items, performs an asynchronous operation, and passes the modified
-/// batch to the next node.
-class AsyncBatchFlow<TIn, TOut> extends AsyncFlow {
-  /// Creates an instance of [AsyncBatchFlow].
+/// `AsyncBatchFlow` extends `AsyncFlow` and implements the batch processing
+/// pattern from Python's PocketFlow. It runs the flow graph multiple times,
+/// once for each set of parameters returned by `prepAsync`.
+///
+/// This matches Python's implementation:
+/// ```python
+/// class AsyncBatchFlow(AsyncFlow,BatchFlow):
+///     async def _run_async(self,shared):
+///         pr=await self.prep_async(shared) or []
+///         for bp in pr: await self._orch_async(shared,{**self.params,**bp})
+///         return await self.post_async(shared,pr,None)
+/// ```
+///
+/// Key differences from `StreamingBatchFlow`:
+/// - `AsyncBatchFlow`: Runs the flow **multiple times** with different params
+/// - `StreamingBatchFlow`: Processes items through a **pipeline** of nodes
+class AsyncBatchFlow extends AsyncFlow {
+  /// Creates a new [AsyncBatchFlow].
   ///
-  /// The [nodes] parameter is a list of [BaseNode] instances that make up the
-  /// flow. The nodes are chained together in the order they are provided.
-  AsyncBatchFlow(this.nodes) {
-    if (nodes.isEmpty) {
-      throw ArgumentError('The list of nodes cannot be empty.');
-    }
-
-    start(nodes.first);
-    for (var i = 0; i < nodes.length - 1; i++) {
-      nodes[i].next(nodes[i + 1]);
-    }
-  }
-
-  /// The list of nodes in the flow.
-  final List<BaseNode> nodes;
+  /// An optional [start] node can be provided to set the entry point of the
+  /// flow.
+  AsyncBatchFlow({super.start});
 
   @override
-  /// Executes the asynchronous batch flow.
+  /// Async-specific run method for AsyncBatchFlow.
   ///
-  /// This method expects a list of items to be provided in the flow's
-  /// parameters under the key "items". It then populates the shared state with
-  /// this list and executes the flow of nodes.
+  /// This method follows Python's AsyncBatchFlow pattern:
+  /// 1. Calls prepAsync(shared) to get a list of parameter maps
+  /// 2. For each parameter map, calls orchAsync with merged parameters
+  /// 3. Calls postAsync(shared, prepResult, null)
   ///
-  /// Returns the result of the last node in the flow, which is expected to be
-  /// the final processed batch of items.
-  Future<dynamic> run(Map<String, dynamic> shared) async {
-    // Before the flow starts, the initial batch of items is expected to be in
-    // the 'items' parameter of the flow itself.
-    if (!params.containsKey('items') || params['items'] is! List) {
-      throw ArgumentError(
-        'AsyncBatchFlow requires a list of items under the key "items" in '
-        'its params.',
-      );
+  /// Matches Python's _run_async method:
+  /// ```python
+  /// async def _run_async(self,shared):
+  ///     pr=await self.prep_async(shared) or []
+  ///     for bp in pr: await self._orch_async(shared,{**self.params,**bp})
+  ///     return await self.post_async(shared,pr,None)
+  /// ```
+  Future<dynamic> runAsync(Map<String, dynamic> shared) async {
+    // Store shared for use in lifecycle methods
+    this.shared = shared;
+
+    // Get batch parameters from prepAsync
+    final prepResult = await prepAsync(shared);
+    final batchParams = (prepResult as List<Map<String, dynamic>>?) ?? [];
+
+    // Run the flow once for each set of batch parameters
+    for (final batchParam in batchParams) {
+      // Merge flow params with batch params (batch params override)
+      final mergedParams = <String, dynamic>{
+        ...params,
+        ...batchParam,
+      };
+
+      // Run orchestration with merged parameters
+      // Note: orchAsync delegates to orch, which handles the node execution
+      await orchAsync(shared, mergedParams);
     }
 
-    // The initial `shared` storage is populated with the batch of items.
-    // Each subsequent node in the flow is responsible for reading from and
-    // writing to the 'items' key in the `shared` map.
-    final initialShared = Map<String, dynamic>.from(shared);
-    initialShared['items'] = List<TIn>.from(params['items'] as List);
-
-    // The `super.run()` method executes the flow of nodes. Each node will
-    // read and write to the `initialShared` map.
-    return super.run(initialShared);
+    // Return post-processing result
+    return postAsync(shared, prepResult, null);
   }
 
   @override
-  AsyncBatchFlow<TIn, TOut> clone() {
-    final clonedNodes = nodes.map((node) => node.clone()).toList();
-    return AsyncBatchFlow<TIn, TOut>(clonedNodes)
-      ..name = name
-      ..params = Map.from(params);
+  /// Creates a deep copy of this [AsyncBatchFlow].
+  AsyncBatchFlow clone() {
+    return super.copy(AsyncBatchFlow.new);
   }
 }

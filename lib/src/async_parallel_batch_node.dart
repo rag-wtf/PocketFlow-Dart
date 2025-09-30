@@ -1,6 +1,7 @@
 import 'dart:async';
 
-import 'package:pocketflow/src/node.dart';
+import 'package:pocketflow/src/async_node.dart';
+import 'package:pocketflow/src/base_node.dart';
 
 /// A function type for an asynchronous, parallel batch item execution block.
 typedef AsyncParallelBatchItemExecFunction<I, O> = Future<O> Function(I item);
@@ -8,46 +9,62 @@ typedef AsyncParallelBatchItemExecFunction<I, O> = Future<O> Function(I item);
 /// A class for defining nodes that process a batch of items asynchronously
 /// and in parallel.
 ///
-/// `AsyncParallelBatchNode` is a convenience class that simplifies the creation
-/// of nodes that perform an asynchronous, parallel batch operation. You provide
-/// a function that processes a single item, and the node will apply this
-/// function to all items in the input batch concurrently using `Future.wait`.
-class AsyncParallelBatchNode<I, O> extends Node {
+/// This class matches Python's `AsyncParallelBatchNode` behavior:
+/// - `prepAsync()` returns a list of items to process
+/// - `execAsync(item)` processes a single item (override this in subclasses)
+/// - The base class handles parallel execution using `Future.wait`
+/// - `postAsync()` receives the list of results
+///
+/// Example:
+/// ```dart
+/// class ParallelProcessor extends AsyncParallelBatchNode<int, int> {
+///   @override
+///   Future<List<int>> prepAsync(Map<String, dynamic> shared) async {
+///     return shared['numbers'] as List<int>;
+///   }
+///
+///   @override
+///   Future<int> execAsync(int item) async {
+///     await Future.delayed(Duration(milliseconds: 100));
+///     return item * 2;
+///   }
+///
+///   @override
+///   Future<String> postAsync(
+///     Map<String, dynamic> shared,
+///     dynamic prepResult,
+///     dynamic execResult,
+///   ) async {
+///     shared['results'] = execResult;
+///     return 'processed';
+///   }
+/// }
+/// ```
+class AsyncParallelBatchNode<I, O> extends AsyncNode {
   /// Creates a new `AsyncParallelBatchNode`.
   ///
-  /// - [execFunction]: The asynchronous function to be executed for each
-  ///   item in the batch.
-  AsyncParallelBatchNode(AsyncParallelBatchItemExecFunction<I, O> execFunction)
-    : _execFunction = execFunction;
+  /// Can be created with an optional [execFunction] for simple cases,
+  /// or subclassed to override `prepAsync`, `execAsync`, and `postAsync`.
+  AsyncParallelBatchNode([
+    AsyncParallelBatchItemExecFunction<I, O>? execFunction,
+  ]) : _execFunction = execFunction;
 
   /// The asynchronous function to be executed for each item in the batch.
-  final AsyncParallelBatchItemExecFunction<I, O> _execFunction;
-
-  /// A convenience method to execute the node directly with a list of items.
-  ///
-  /// This is primarily for ease of use and testing. It sets the [items] in
-  /// the node's parameters and calls the `run` method.
-  Future<List<O>> call(List<I> items) async {
-    params['items'] = items;
-    final result = await run(params);
-    // The result from `run` is dynamic, so we cast it to the expected type.
-    if (result is List) {
-      return result.cast<O>();
-    }
-    // This path should ideally not be reached if `exec` is correct.
-    return [];
-  }
+  /// This is used when the node is created with a function instead of
+  /// subclassing.
+  final AsyncParallelBatchItemExecFunction<I, O>? _execFunction;
 
   @override
   /// Prepares the batch of items for processing.
   ///
-  /// This method retrieves the list of items from the node's parameters. It
-  /// expects a parameter named "items" which should be a `List<I>`.
+  /// This method can be overridden in subclasses to provide custom preparation
+  /// logic. The default implementation retrieves items from params['items']
+  /// or shared['items'] (params takes precedence).
   ///
-  /// Throws an [ArgumentError] if the "items" parameter is not provided or is
-  /// of the wrong type.
-  Future<List<I>> prep(Map<String, dynamic> shared) async {
-    final items = params['items'];
+  /// Returns a list of items to be processed in parallel.
+  Future<List<I>> prepAsync(Map<String, dynamic> shared) async {
+    // Check params first, then shared (for flow compatibility)
+    final items = params['items'] ?? shared['items'];
 
     if (items == null) {
       throw ArgumentError('The "items" parameter must be provided.');
@@ -73,22 +90,69 @@ class AsyncParallelBatchNode<I, O> extends Node {
     );
   }
 
+  /// Processes a single item asynchronously.
+  ///
+  /// This method should be overridden in subclasses to define the processing
+  /// logic for each individual item. The base class will call this method
+  /// for each item in parallel.
+  ///
+  /// If a function was provided to the constructor, it will be used instead.
+  ///
+  /// Note: This method has a different signature than the parent's execAsync
+  /// because it processes individual items, not the entire prep result.
+  Future<O> execAsyncItem(I item) async {
+    if (_execFunction != null) {
+      return _execFunction(item);
+    }
+    throw UnimplementedError(
+      'execAsyncItem must be overridden in subclasses or a function must be '
+      'provided to the constructor.',
+    );
+  }
+
   @override
   /// Executes the batch processing in parallel.
   ///
-  /// This method applies the [_execFunction] to each item in the [prepResult]
+  /// This method applies [execAsyncItem] to each item in the [prepResult]
   /// list and waits for all the resulting futures to complete using
   /// `Future.wait`.
-  Future<List<O>> exec(covariant List<I> prepResult) {
-    final futures = prepResult.map(_execFunction).toList();
+  ///
+  /// This matches Python's behavior:
+  /// ```python
+  /// async def _exec(self, items):
+  ///     return await asyncio.gather(*(super()._exec(i) for i in items))
+  /// ```
+  Future<List<O>> execAsync(dynamic prepResult) async {
+    final items = prepResult as List<I>;
+    final futures = items.map(execAsyncItem).toList();
     return Future.wait(futures);
+  }
+
+  @override
+  /// Post-processes the results after parallel execution.
+  ///
+  /// This method can be overridden in subclasses to handle the results.
+  /// The default implementation updates shared['items'] with the results
+  /// (for flow compatibility) and returns the exec result.
+  Future<dynamic> postAsync(
+    Map<String, dynamic> shared,
+    dynamic prepResult,
+    dynamic execResult,
+  ) async {
+    // Update shared['items'] for flow compatibility
+    shared['items'] = execResult;
+    return execResult;
+  }
+
+  @override
+  /// Creates a new instance of AsyncParallelBatchNode.
+  BaseNode createInstance() {
+    return AsyncParallelBatchNode<I, O>(_execFunction);
   }
 
   @override
   /// Creates a copy of this [AsyncParallelBatchNode].
   AsyncParallelBatchNode<I, O> clone() {
-    return AsyncParallelBatchNode<I, O>(_execFunction)
-      ..name = name
-      ..params = Map.from(params);
+    return super.clone() as AsyncParallelBatchNode<I, O>;
   }
 }

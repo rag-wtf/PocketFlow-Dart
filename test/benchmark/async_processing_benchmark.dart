@@ -12,17 +12,11 @@ class AsyncAddNode extends SimpleAsyncNode {
       });
 }
 
-class AsyncBatchAddNode extends AsyncBatchNode<List<int>, List<int>> {
+class AsyncBatchAddNode extends AsyncBatchNode<int, int> {
   AsyncBatchAddNode()
-    : super((items) async {
+    : super((item) async {
         await Future<void>.delayed(Duration.zero);
-        final a = items[0];
-        final b = items[1];
-        final c = <int>[];
-        for (var i = 0; i < a.length; i++) {
-          c.add(a[i] + b[i]);
-        }
-        return [c];
+        return item * 2; // Simple doubling operation for benchmark
       });
 }
 
@@ -81,19 +75,11 @@ void main() {
     });
 
     test('AsyncBatchNode Execution', () async {
-      final node = AsyncBatchNode<List<int>, List<int>>((items) async {
-        final a = items[0];
-        final b = items[1];
-        final c = <int>[];
-        for (var i = 0; i < a.length; i++) {
-          c.add(a[i] + b[i]);
-        }
-        return [c];
+      final node = AsyncBatchNode<int, int>((item) async {
+        await Future<void>.delayed(Duration.zero);
+        return item * 2; // Simple doubling operation for benchmark
       });
-      node.params['items'] = [
-        List.generate(10, (i) => i),
-        List.generate(10, (i) => i + 1),
-      ];
+      node.params['items'] = List.generate(100, (i) => i);
       final stopwatch = Stopwatch()..start();
       const iterations = 10000;
 

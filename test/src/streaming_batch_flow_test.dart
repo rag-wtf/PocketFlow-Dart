@@ -9,16 +9,16 @@ void main() {
     late Map<String, dynamic> sharedStorage;
 
     setUp(() {
-      // Define the first node's processing logic
-      node1 = AsyncBatchNode<int, int>((items) async {
+      // Define the first node's processing logic (processes single item)
+      node1 = AsyncBatchNode<int, int>((item) async {
         await Future<void>.delayed(const Duration(milliseconds: 10));
-        return items.map((i) => i * 2).toList();
+        return item * 2;
       });
 
-      // Define the second node's processing logic
-      node2 = AsyncBatchNode<int, int>((items) async {
+      // Define the second node's processing logic (processes single item)
+      node2 = AsyncBatchNode<int, int>((item) async {
         await Future<void>.delayed(const Duration(milliseconds: 10));
-        return items.map((i) => i + 1).toList();
+        return item + 1;
       });
 
       flow = StreamingBatchFlow<int, int>([node1, node2]);

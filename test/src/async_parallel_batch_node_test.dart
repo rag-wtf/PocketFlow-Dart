@@ -1,17 +1,17 @@
 import 'package:pocketflow/src/async_parallel_batch_node.dart';
 import 'package:test/test.dart';
 
-// A helper class to test the non-list return path in `call`.
+// A helper class to test the non-list return path.
 class _TestNode<I, O> extends AsyncParallelBatchNode<I, O> {
   _TestNode(super.execFunction);
 
   @override
-  Future<dynamic> post(
+  Future<dynamic> postAsync(
     Map<String, dynamic> shared,
     dynamic prepResult,
     dynamic execResult,
   ) async {
-    // Return a non-list to test the defensive code in `call`.
+    // Return a non-list to test the defensive code.
     return 'not a list';
   }
 }
@@ -27,9 +27,10 @@ void main() {
             const Duration(milliseconds: 100),
             () => value * 2,
           ),
-        );
-        final inputs = [1, 2, 3];
-        final outputs = await node.call(inputs);
+        )..params['items'] = [1, 2, 3];
+
+        final shared = <String, dynamic>{};
+        final outputs = await node.run(shared);
         expect(outputs, equals([2, 4, 6]));
       },
     );
@@ -37,26 +38,28 @@ void main() {
     test('should handle an empty batch', () async {
       final node = AsyncParallelBatchNode<int, int>(
         (value) => Future.value(value * 2),
-      );
-      final inputs = <int>[];
-      final outputs = await node.call(inputs);
+      )..params['items'] = <int>[];
+
+      final shared = <String, dynamic>{};
+      final outputs = await node.run(shared);
       expect(outputs, isEmpty);
     });
 
     test('should propagate errors for failing futures', () async {
       final node = AsyncParallelBatchNode<int, int>(
         (value) => Future.error('An error occurred'),
-      );
-      final inputs = [1, 2, 3];
-      expect(node.call(inputs), throwsA(isA<String>()));
+      )..params['items'] = [1, 2, 3];
+
+      final shared = <String, dynamic>{};
+      expect(() => node.run(shared), throwsA(isA<String>()));
     });
 
-    group('prep', () {
+    group('prepAsync', () {
       test('should throw an error if "items" is not provided', () async {
         final node = AsyncParallelBatchNode<int, int>((item) async => item);
         // No 'items' in params
         expect(
-          () => node.prep({}),
+          () => node.prepAsync({}),
           throwsA(
             isA<ArgumentError>().having(
               (e) => e.message,
@@ -71,7 +74,7 @@ void main() {
         final node = AsyncParallelBatchNode<int, int>((item) async => item)
           ..params['items'] = 'not a list';
         expect(
-          () => node.prep({}),
+          () => node.prepAsync({}),
           throwsA(
             isA<ArgumentError>().having(
               (e) => e.message,
@@ -88,7 +91,7 @@ void main() {
           final node = AsyncParallelBatchNode<int, int>((item) async => item)
             ..params['items'] = <dynamic>[1, 'two', 3];
           expect(
-            () => node.prep({}),
+            () => node.prepAsync({}),
             throwsA(
               isA<ArgumentError>().having(
                 (e) => e.message,
@@ -104,19 +107,21 @@ void main() {
       test('should handle a List<dynamic> with correct item types', () async {
         final node = AsyncParallelBatchNode<int, int>((item) async => item);
         node.params['items'] = <dynamic>[1, 2, 3];
-        final result = await node.prep({});
+        final result = await node.prepAsync({});
         expect(result, isA<List<int>>());
         expect(result, [1, 2, 3]);
       });
     });
 
     test(
-      'call should return an empty list if run returns a non-list result',
+      'run should return non-list result from postAsync',
       () async {
-        final node = _TestNode<int, int>((item) async => item * 2);
+        final node = _TestNode<int, int>((item) async => item * 2)
+          ..params['items'] = [1, 2, 3];
 
-        final result = await node.call([1, 2, 3]);
-        expect(result, isEmpty);
+        final shared = <String, dynamic>{};
+        final result = await node.run(shared);
+        expect(result, equals('not a list'));
       },
     );
 
@@ -124,7 +129,8 @@ void main() {
       Future<int> execFunction(int item) async => item * 2;
       final originalNode = AsyncParallelBatchNode<int, int>(execFunction)
         ..name = 'original'
-        ..params['value'] = 123;
+        ..params['value'] = 123
+        ..params['items'] = [10];
 
       final clonedNode = originalNode.clone();
 
@@ -141,7 +147,8 @@ void main() {
       expect(clonedNode.params['value'], 123);
 
       // Check if the exec function is the same
-      final result = await clonedNode.call([10]);
+      final shared = <String, dynamic>{};
+      final result = await clonedNode.run(shared);
       expect(result, [20]);
     });
   });

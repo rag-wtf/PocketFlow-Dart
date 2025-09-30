@@ -1,5 +1,5 @@
 // import 'package:pocketflow/pocketflow.dart';
-import 'package:test/test.dart';
+// import 'package:test/test.dart';
 
 /*
 // Simple async node that sets 'current' to a given number.
@@ -91,30 +91,15 @@ class AsyncPathNode extends AsyncNode {
 */
 
 void main() {
-  group(
-    'AsyncNode Parity Tests',
-    () {
-      // TODO(jules): These tests are skipped because the `run` method on a
-      // node creates a shallow copy of the shared state, so modifications
-      // inside the node's `prep` method are not reflected in the original
-      // `sharedStorage` map after the run completes.
-    },
-    skip:
-        'Skipping due to differences in state management between Dart and '
-        'Python nodes.',
-  );
-
-  group(
-    'AsyncFlow Parity Tests',
-    () {
-      // TODO(jules): These tests are skipped because the Dart Flow
-      // implementation creates a shallow copy of the shared state for each
-      // run. This prevents state modifications within a node from being
-      // visible outside the flow, which is a key difference from the Python
-      // implementation these tests were based on.
-    },
-    skip:
-        'Skipping due to differences in state management between Dart and '
-        'Python flows.',
-  );
+  // Note: The original parity tests were removed because they tested
+  // Python-specific state management behavior that differs from Dart's
+  // implementation. The Dart implementation does NOT create shallow copies
+  // of shared state - it passes the same reference throughout the flow.
+  // The tests were based on incorrect assumptions about the implementation.
+  //
+  // The actual AsyncNode and AsyncFlow functionality is thoroughly tested in:
+  // - test/src/async_node_test.dart
+  // - test/src/async_flow_test.dart
+  // - test/async_node_retry_fallback_test.dart
+  // - test/async_flow_with_mixed_nodes_test.dart
 }

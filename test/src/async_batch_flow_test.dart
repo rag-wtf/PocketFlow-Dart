@@ -1,92 +1,105 @@
 import 'package:pocketflow/pocketflow.dart';
 import 'package:test/test.dart';
 
+// Test node that processes data based on params
+class AsyncDataProcessNode extends AsyncNode {
+  @override
+  Future<dynamic> prepAsync(Map<String, dynamic> shared) async {
+    final key = params['key'] as String;
+    final data = (shared['input_data'] as Map<String, dynamic>)[key];
+    if (!shared.containsKey('results')) {
+      shared['results'] = <String, dynamic>{};
+    }
+    (shared['results'] as Map<String, dynamic>)[key] = data;
+    return data;
+  }
+
+  @override
+  Future<dynamic> postAsync(
+    Map<String, dynamic> shared,
+    dynamic prepResult,
+    dynamic execResult,
+  ) async {
+    await Future<void>.delayed(const Duration(milliseconds: 10));
+    final key = params['key'] as String;
+    (shared['results'] as Map<String, dynamic>)[key] = (prepResult as int) * 2;
+    return 'processed';
+  }
+
+  @override
+  BaseNode createInstance() {
+    return AsyncDataProcessNode();
+  }
+}
+
 void main() {
   group('AsyncBatchFlow', () {
-    late AsyncBatchFlow<int, int> flow;
-    late AsyncBatchNode<int, int> node1;
-    late AsyncBatchNode<int, int> node2;
-    late Map<String, dynamic> sharedStorage;
-
-    setUp(() {
-      // Define the first node's processing logic
-      node1 = AsyncBatchNode<int, int>((items) async {
-        await Future<void>.delayed(const Duration(milliseconds: 10));
-        return items.map((i) => i * 2).toList();
-      });
-
-      // Define the second node's processing logic
-      node2 = AsyncBatchNode<int, int>((items) async {
-        await Future<void>.delayed(const Duration(milliseconds: 10));
-        return items.map((i) => i + 1).toList();
-      });
-
-      flow = AsyncBatchFlow<int, int>([node1, node2]);
-      sharedStorage = {};
-    });
-
-    test(
-      'run processes items through all nodes in the flow asynchronously',
-      () async {
-        final initialItems = [1, 2, 3];
-        flow.params['items'] = initialItems;
-
-        final result = await flow.run(sharedStorage);
-
-        // Node1 multiplies by 2: [2, 4, 6]
-        // Node2 adds 1: [3, 5, 7]
-        expect(result, equals([3, 5, 7]));
-      },
-    );
-
-    test('run should handle an empty list of items', () async {
-      flow.params['items'] = <int>[];
-      final result = await flow.run(sharedStorage);
-      expect(result, isEmpty);
-    });
-
-    test('constructor should throw ArgumentError if nodes list is empty', () {
-      expect(
-        () => AsyncBatchFlow<int, int>([]),
-        throwsA(isA<ArgumentError>()),
+    test('basic async batch processing with multiple keys', () async {
+      // Create a custom AsyncBatchFlow subclass
+      final flow = _SimpleTestAsyncBatchFlow(
+        start: AsyncDataProcessNode(),
       );
+
+      final shared = <String, dynamic>{
+        'input_data': {
+          'a': 1,
+          'b': 2,
+          'c': 3,
+        },
+      };
+
+      await flow.runAsync(shared);
+
+      final expectedResults = {
+        'a': 2, // 1 * 2
+        'b': 4, // 2 * 2
+        'c': 6, // 3 * 2
+      };
+      expect(shared['results'], equals(expectedResults));
     });
 
-    test('run should throw ArgumentError if items parameter is missing', () {
-      expect(
-        () => flow.run(sharedStorage),
-        throwsA(isA<ArgumentError>()),
+    test('empty async batch', () async {
+      final flow = _SimpleTestAsyncBatchFlow(
+        start: AsyncDataProcessNode(),
       );
-    });
 
-    test('run should throw ArgumentError if items is not a List', () {
-      flow.params['items'] = 'not a list';
+      final shared = <String, dynamic>{
+        'input_data': <String, dynamic>{},
+      };
+
+      await flow.runAsync(shared);
+
       expect(
-        () => flow.run(sharedStorage),
-        throwsA(isA<ArgumentError>()),
+        shared['results'] ?? <String, dynamic>{},
+        equals(<String, dynamic>{}),
       );
     });
 
     test('clone should create a deep copy of the flow', () {
-      flow
-        ..name = 'AsyncBatchFlow'
+      final node = AsyncDataProcessNode();
+      final flow = AsyncBatchFlow(start: node)
+        ..name = 'TestFlow'
         ..params['value'] = 42;
 
       final clonedFlow = flow.clone();
 
-      expect(clonedFlow, isA<AsyncBatchFlow<int, int>>());
-      expect(clonedFlow.name, equals('AsyncBatchFlow'));
+      expect(clonedFlow, isA<AsyncBatchFlow>());
+      expect(clonedFlow.name, equals('TestFlow'));
       expect(clonedFlow.params['value'], equals(42));
       expect(clonedFlow, isNot(same(flow)));
     });
-
-    test('run should execute the flow and return the result', () async {
-      final initialItems = [1, 2, 3];
-      flow.params['items'] = initialItems;
-
-      final result = await flow.run(sharedStorage);
-
-      expect(result, equals([3, 5, 7]));
-    });
   });
+}
+
+// Helper class for testing
+class _SimpleTestAsyncBatchFlow extends AsyncBatchFlow {
+  _SimpleTestAsyncBatchFlow({super.start});
+
+  @override
+  Future<List<Map<String, dynamic>>> prepAsync(
+    Map<String, dynamic> shared,
+  ) async {
+    final inputData = shared['input_data'] as Map<String, dynamic>;
+    return inputData.keys.map((k) => {'key': k}).toList();
+  }
 }

@@ -65,8 +65,18 @@ class StreamingBatchFlow<TIn, TOut> extends AsyncFlow {
     final initialShared = Map<String, dynamic>.from(shared);
     initialShared['items'] = List<TIn>.from(params['items'] as List);
 
-    // The `super.run()` method executes the flow of nodes. Each node will
-    // read and write to the `initialShared` map.
-    return super.run(initialShared);
+    // Remove 'items' from flow params so it doesn't override shared['items']
+    // in subsequent nodes. Each node should read from shared['items'] which
+    // gets updated by the previous node.
+    final originalItems = params.remove('items');
+
+    try {
+      // The `super.run()` method executes the flow of nodes. Each node will
+      // read and write to the `initialShared` map.
+      return await super.run(initialShared);
+    } finally {
+      // Restore the items param
+      params['items'] = originalItems;
+    }
   }
 }

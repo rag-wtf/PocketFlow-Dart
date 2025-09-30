@@ -1,36 +1,71 @@
+import 'package:pocketflow/src/async_node.dart';
 import 'package:pocketflow/src/base_node.dart';
-import 'package:pocketflow/src/node.dart';
 
-/// A function type for an asynchronous batch execution block.
-typedef AsyncBatchExecFunction<I, O> = Future<List<O>> Function(List<I> items);
+/// A function type for an asynchronous batch item execution block.
+typedef AsyncBatchItemExecFunction<I, O> = Future<O> Function(I item);
 
-/// A class for defining nodes that process a batch of items asynchronously.
+/// A class for defining nodes that process a batch of items asynchronously
+/// in sequential order.
 ///
-/// `AsyncBatchNode` is a convenience class that simplifies the creation of
-/// nodes that perform an asynchronous batch operation. Instead of creating a
-/// new class that extends [Node] and implementing the batch logic, you can
-/// pass an [AsyncBatchExecFunction] directly to the constructor.
-class AsyncBatchNode<I, O> extends Node {
+/// This class matches Python's `AsyncBatchNode` behavior:
+/// - `prepAsync()` returns a list of items to process
+/// - `execAsyncItem(item)` processes a single item (override this in
+///   subclasses)
+/// - The base class handles sequential execution (processes items one by one)
+/// - `postAsync()` receives the list of results
+///
+/// The key difference from `AsyncParallelBatchNode` is that items are
+/// processed **sequentially** (one after another) rather than in parallel.
+///
+/// Example:
+/// ```dart
+/// class SequentialProcessor extends AsyncBatchNode<int, int> {
+///   @override
+///   Future<List<int>> prepAsync(Map<String, dynamic> shared) async {
+///     return shared['numbers'] as List<int>;
+///   }
+///
+///   @override
+///   Future<int> execAsyncItem(int item) async {
+///     await Future.delayed(Duration(milliseconds: 100));
+///     return item * 2;
+///   }
+///
+///   @override
+///   Future<String> postAsync(
+///     Map<String, dynamic> shared,
+///     dynamic prepResult,
+///     dynamic execResult,
+///   ) async {
+///     shared['results'] = execResult;
+///     return 'processed';
+///   }
+/// }
+/// ```
+class AsyncBatchNode<I, O> extends AsyncNode {
   /// Creates a new `AsyncBatchNode`.
   ///
-  /// - [execFunction]: The asynchronous function to be executed by this node.
-  AsyncBatchNode(AsyncBatchExecFunction<I, O> execFunction)
+  /// Can be created with an optional [execFunction] for simple cases,
+  /// or subclassed to override `prepAsync`, `execAsyncItem`, and `postAsync`.
+  AsyncBatchNode([AsyncBatchItemExecFunction<I, O>? execFunction])
     : _execFunction = execFunction;
 
-  /// The asynchronous function to be executed by this node.
-  final AsyncBatchExecFunction<I, O> _execFunction;
+  /// The asynchronous function to be executed for each item in the batch.
+  /// This is used when the node is created with a function instead of
+  /// subclassing.
+  final AsyncBatchItemExecFunction<I, O>? _execFunction;
 
   @override
   /// Prepares the batch of items for processing.
   ///
-  /// This method retrieves the list of items from the `shared` map or the
-  /// node's parameters. It expects a parameter named "items" which should be
-  /// a `List<I>`.
+  /// This method can be overridden in subclasses to provide custom preparation
+  /// logic. The default implementation retrieves items from params['items']
+  /// or shared['items'] (params takes precedence).
   ///
-  /// Throws an [ArgumentError] if the "items" parameter is not provided or is
-  /// of the wrong type.
-  Future<List<I>> prep(Map<String, dynamic> shared) async {
-    final items = shared['items'] ?? params['items'];
+  /// Returns a list of items to be processed sequentially.
+  Future<List<I>> prepAsync(Map<String, dynamic> shared) async {
+    // Check params first, then shared (for flow compatibility)
+    final items = params['items'] ?? shared['items'];
 
     if (items == null) {
       throw ArgumentError('The "items" parameter must be provided.');
@@ -56,16 +91,65 @@ class AsyncBatchNode<I, O> extends Node {
     );
   }
 
-  @override
-  /// Executes the asynchronous batch function.
+  /// Processes a single item asynchronously.
   ///
-  /// This method calls the [_execFunction] that was passed to the constructor.
-  Future<List<O>> exec(covariant List<I> prepResult) {
-    return _execFunction(prepResult);
+  /// This method should be overridden in subclasses to define the processing
+  /// logic for each individual item. The base class will call this method
+  /// for each item sequentially.
+  ///
+  /// If a function was provided to the constructor, it will be used instead.
+  ///
+  /// Note: This method has a different signature than the parent's execAsync
+  /// because it processes individual items, not the entire prep result.
+  Future<O> execAsyncItem(I item) async {
+    if (_execFunction != null) {
+      return _execFunction(item);
+    }
+    throw UnimplementedError(
+      'execAsyncItem must be overridden in subclasses or a function must be '
+      'provided to the constructor.',
+    );
   }
 
   @override
-  /// Creates a new instance of AsyncBatchNode with the same function.
+  /// Executes the batch processing sequentially.
+  ///
+  /// This method applies [execAsyncItem] to each item in the [prepResult]
+  /// list one by one, waiting for each to complete before starting the next.
+  ///
+  /// This matches Python's behavior:
+  /// ```python
+  /// async def _exec(self, items):
+  ///     return [await super()._exec(i) for i in items]
+  /// ```
+  Future<List<O>> execAsync(dynamic prepResult) async {
+    final items = prepResult as List<I>;
+    final results = <O>[];
+    for (final item in items) {
+      final result = await execAsyncItem(item);
+      results.add(result);
+    }
+    return results;
+  }
+
+  @override
+  /// Post-processes the results after sequential execution.
+  ///
+  /// This method can be overridden in subclasses to handle the results.
+  /// The default implementation updates shared['items'] with the results
+  /// (for flow compatibility) and returns the exec result.
+  Future<dynamic> postAsync(
+    Map<String, dynamic> shared,
+    dynamic prepResult,
+    dynamic execResult,
+  ) async {
+    // Update shared['items'] for flow compatibility
+    shared['items'] = execResult;
+    return execResult;
+  }
+
+  @override
+  /// Creates a new instance of AsyncBatchNode.
   BaseNode createInstance() {
     return AsyncBatchNode<I, O>(_execFunction);
   }
@@ -74,17 +158,5 @@ class AsyncBatchNode<I, O> extends Node {
   /// Creates a copy of this [AsyncBatchNode].
   AsyncBatchNode<I, O> clone() {
     return super.clone() as AsyncBatchNode<I, O>;
-  }
-
-  @override
-  /// Executes the node's lifecycle and updates the shared state.
-  ///
-  /// This method calls the parent `run` method and then stores the result
-  /// back into the `shared` map under the key "items". This allows subsequent
-  /// nodes in the flow to access the processed batch.
-  Future<dynamic> run(Map<String, dynamic> shared) async {
-    final result = await super.run(shared);
-    shared['items'] = result;
-    return result;
   }
 }
