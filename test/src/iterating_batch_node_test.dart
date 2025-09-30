@@ -70,8 +70,7 @@ void main() {
     test(
       'clone should create a new instance with the same properties',
       () async {
-        final node = _TestIteratingNode()
-        ..name = 'original';
+        final node = _TestIteratingNode()..name = 'original';
         node.params['items'] = [1];
 
         final cloned = node.clone();
