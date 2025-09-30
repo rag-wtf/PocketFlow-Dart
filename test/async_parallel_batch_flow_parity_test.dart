@@ -155,9 +155,7 @@ void main() {
         ],
       };
 
-      final processor = AsyncParallelNumberProcessor(
-        delay: const Duration(milliseconds: 100),
-      );
+      final processor = AsyncParallelNumberProcessor();
       final aggregator = AsyncAggregatorNode();
 
       processor - 'processed' >> aggregator;
@@ -189,7 +187,7 @@ void main() {
         7,
         8,
         9,
-      ].fold<int>(0, (sum, num) => sum + (num * 2));
+      ].fold<int>(0, (sum, n) => sum + (n * 2));
       expect(sharedStorage['total'], equals(expectedTotal));
 
       // Verify parallel execution (should be < 200ms for 3 batches)
@@ -257,7 +255,7 @@ void main() {
         8,
         9,
         10,
-      ].fold<int>(0, (sum, num) => sum + (num * 2));
+      ].fold<int>(0, (sum, n) => sum + (n * 2));
       expect(sharedStorage['total'], equals(expectedTotal));
     });
   });
