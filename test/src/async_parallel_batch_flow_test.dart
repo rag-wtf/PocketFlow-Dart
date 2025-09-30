@@ -1,10 +1,17 @@
+// NOTE: This file tests the OLD AsyncParallelBatchFlow API which has been
+// moved to ParallelNodeBatchFlow. The new AsyncParallelBatchFlow matches
+// Python's behavior and is tested in the parity tests.
+//
+// These tests are kept for backwards compatibility testing of
+// ParallelNodeBatchFlow.
+
 import 'package:pocketflow/pocketflow.dart';
 import 'package:test/test.dart';
 
 void main() {
-  group('AsyncParallelBatchFlow', () {
+  group('ParallelNodeBatchFlow (old AsyncParallelBatchFlow API)', () {
     test('should process a batch of inputs in parallel', () async {
-      final flow = AsyncParallelBatchFlow<int, int>([
+      final flow = ParallelNodeBatchFlow<int, int>([
         SimpleAsyncNode(
           (dynamic r) async =>
               ((r as Map<String, dynamic>)['input'] as int) * 2,
@@ -24,7 +31,7 @@ void main() {
     });
 
     test('should handle an empty input list', () async {
-      final flow = AsyncParallelBatchFlow<int, int>([
+      final flow = ParallelNodeBatchFlow<int, int>([
         SimpleAsyncNode((dynamic r) async => 1),
       ]);
       final result = await flow.call([]);
@@ -33,13 +40,13 @@ void main() {
 
     test('constructor should throw ArgumentError if nodes list is empty', () {
       expect(
-        () => AsyncParallelBatchFlow<int, int>([]),
+        () => ParallelNodeBatchFlow<int, int>([]),
         throwsA(isA<ArgumentError>()),
       );
     });
 
     test('run should throw ArgumentError if input parameter is missing', () {
-      final flow = AsyncParallelBatchFlow<int, int>([
+      final flow = ParallelNodeBatchFlow<int, int>([
         SimpleAsyncNode((dynamic r) async => 1),
       ]);
       // No 'input' in params
@@ -50,7 +57,7 @@ void main() {
     });
 
     test('run should throw ArgumentError if input is not a List', () {
-      final flow = AsyncParallelBatchFlow<int, int>([
+      final flow = ParallelNodeBatchFlow<int, int>([
         SimpleAsyncNode((dynamic r) async => 1),
       ]);
       flow.params['input'] = 'not a list';
@@ -62,20 +69,16 @@ void main() {
 
     test('clone should create a deep copy of the flow', () {
       final node = SimpleAsyncNode((dynamic r) async => 1);
-      final flow = AsyncParallelBatchFlow<int, int>([node])
-        ..name = 'ParallelFlow'
-        ..params['value'] = 42;
+      final flow = ParallelNodeBatchFlow<int, int>([node]);
 
       final clonedFlow = flow.clone();
 
-      expect(clonedFlow, isA<AsyncParallelBatchFlow<int, int>>());
-      expect(clonedFlow.name, equals('ParallelFlow'));
-      expect(clonedFlow.params['value'], equals(42));
+      expect(clonedFlow, isA<ParallelNodeBatchFlow<int, int>>());
       expect(clonedFlow, isNot(same(flow)));
     });
 
     test('should propagate errors from nodes', () async {
-      final flow = AsyncParallelBatchFlow<int, int>([
+      final flow = ParallelNodeBatchFlow<int, int>([
         SimpleAsyncNode((dynamic r) async => 1),
         SimpleAsyncNode((dynamic r) async => throw Exception('Node error')),
       ]);

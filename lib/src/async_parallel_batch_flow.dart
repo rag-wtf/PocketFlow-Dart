@@ -1,105 +1,106 @@
 import 'dart:async';
 
-import 'package:pocketflow/src/async_flow.dart';
-import 'package:pocketflow/src/base_node.dart';
+import 'package:pocketflow/src/async_batch_flow.dart';
 
-/// A flow that processes a batch of items by executing a set of asynchronous
-/// nodes in parallel for each item.
+/// An asynchronous parallel batch flow that runs the flow multiple times in
+/// parallel with different parameters.
 ///
-/// `AsyncParallelBatchFlow` is useful for scenarios where multiple independent
-/// asynchronous operations need to be performed on each item in a batch. For
-/// each item, the flow triggers all nodes concurrently and waits for them to
-/// complete.
-class AsyncParallelBatchFlow<TIn, TOut> extends AsyncFlow {
-  /// Creates an instance of [AsyncParallelBatchFlow].
+/// `AsyncParallelBatchFlow` extends `AsyncBatchFlow` and implements the
+/// parallel batch processing pattern from Python's PocketFlow. It runs the flow
+/// graph multiple times in parallel, once for each set of parameters returned
+/// by `prepAsync`.
+///
+/// This matches Python's implementation:
+/// ```python
+/// class AsyncParallelBatchFlow(AsyncFlow,BatchFlow):
+///     async def _run_async(self,shared):
+///         pr=await self.prep_async(shared) or []
+///         await asyncio.gather(
+///             *(self._orch_async(shared,{**self.params,**bp}) for bp in pr)
+///         )
+///         return await self.post_async(shared,pr,None)
+/// ```
+///
+/// Key differences from `AsyncBatchFlow`:
+/// - `AsyncBatchFlow`: Runs the flow **sequentially** with different params
+/// - `AsyncParallelBatchFlow`: Runs the flow **in parallel** with different
+///   params
+///
+/// Example:
+/// ```dart
+/// class MyParallelBatchFlow extends AsyncParallelBatchFlow {
+///   @override
+///   Future<List<Map<String, dynamic>>> prepAsync(
+///     Map<String, dynamic> shared,
+///   ) async {
+///     return [
+///       {'id': 1},
+///       {'id': 2},
+///       {'id': 3},
+///     ];
+///   }
+/// }
+///
+/// final flow = MyParallelBatchFlow(start: myNode);
+/// await flow.runAsync(shared);
+/// ```
+class AsyncParallelBatchFlow extends AsyncBatchFlow {
+  /// Creates a new [AsyncParallelBatchFlow].
   ///
-  /// The [nodes] parameter is a list of [BaseNode] instances that will be
-  /// executed in parallel for each item in the batch.
-  ///
-  /// The [copySharedForParallel] parameter controls whether the shared state
-  /// is copied for each parallel task to avoid race conditions. Defaults to
-  /// true for safety.
-  AsyncParallelBatchFlow(this.nodes, {this.copySharedForParallel = true}) {
-    if (nodes.isEmpty) {
-      throw ArgumentError('The list of nodes cannot be empty.');
-    }
-  }
-
-  /// The list of nodes to be executed in parallel for each item.
-  final List<BaseNode> nodes;
-
-  /// Whether to copy the shared state for each parallel task to avoid race
-  /// conditions. Defaults to true for safety.
-  final bool copySharedForParallel;
-
-  /// Executes the flow with a given list of [items].
-  ///
-  /// This is a convenience method that calls the [run] method with the
-  /// provided [items].
-  Future<dynamic> call(List<TIn> items) async {
-    return run({'input': items});
-  }
+  /// An optional [start] node can be provided to set the entry point of the
+  /// flow.
+  AsyncParallelBatchFlow({super.start});
 
   @override
-  /// Executes the parallel, asynchronous batch flow.
+  /// Async-specific run method for AsyncParallelBatchFlow.
   ///
-  /// This method expects a list of items under the key 'input' in the [shared]
-  /// map. It then iterates over each item and, for each item, executes all the
-  /// nodes in parallel.
+  /// This method follows Python's AsyncParallelBatchFlow pattern:
+  /// 1. Calls prepAsync(shared) to get a list of parameter maps
+  /// 2. For each parameter map, calls orchAsync with merged parameters
+  ///    IN PARALLEL
+  /// 3. Calls postAsync(shared, prepResult, null)
   ///
-  /// Returns a `Future<List<List<dynamic>>>`, where the outer list corresponds
-  /// to the input items and the inner list contains the results from each node
-  /// for a given item.
-  Future<dynamic> run(Map<String, dynamic> shared) async {
-    if (!shared.containsKey('input') || shared['input'] is! List) {
-      throw ArgumentError(
-        'AsyncParallelBatchFlow requires a list of items under the key '
-        '"input" in the shared context. Use the call() method to provide the '
-        'input list.',
-      );
-    }
+  /// Matches Python's _run_async method:
+  /// ```python
+  /// async def _run_async(self,shared):
+  ///     pr=await self.prep_async(shared) or []
+  ///     await asyncio.gather(
+  ///         *(self._orch_async(shared,{**self.params,**bp}) for bp in pr)
+  ///     )
+  ///     return await self.post_async(shared,pr,None)
+  /// ```
+  Future<dynamic> runAsync(Map<String, dynamic> shared) async {
+    // Store shared for use in lifecycle methods
+    this.shared = shared;
 
-    final items = List<TIn>.from(shared['input'] as List);
+    // Get batch parameters from prepAsync
+    final prepResult = await prepAsync(shared);
+    final batchParams = (prepResult as List<Map<String, dynamic>>?) ?? [];
 
-    final batchFutures = items.map((item) {
-      final nodeFutures = nodes.map((node) {
-        final clonedNode = node.clone();
+    // Run the flow in parallel for each set of batch parameters
+    // This is the key difference from AsyncBatchFlow which runs sequentially
+    final futures = batchParams.map((batchParam) {
+      // Merge flow params with batch params (batch params override)
+      final mergedParams = <String, dynamic>{
+        ...params,
+        ...batchParam,
+      };
 
-        if (copySharedForParallel) {
-          // Create a copy of shared state for this parallel task
-          final sharedForTask = Map<String, dynamic>.from(shared);
-          sharedForTask['input'] = item;
-          return clonedNode.run(sharedForTask);
-        } else {
-          // Use the original shared state (potential race condition)
-          // Temporarily set the item in the shared state
-          final originalInput = shared['input'];
-          shared['input'] = item;
-          final future = clonedNode.run(shared);
-          // Restore original input after starting the task
-          if (originalInput != null) {
-            shared['input'] = originalInput;
-          } else {
-            shared.remove('input');
-          }
-          return future;
-        }
-      });
-      return Future.wait(nodeFutures);
+      // Run orchestration with merged parameters
+      // Note: orchAsync delegates to orch, which handles the node execution
+      return orchAsync(shared, mergedParams);
     });
 
-    return Future.wait(batchFutures);
+    // Wait for all parallel executions to complete
+    await Future.wait(futures);
+
+    // Return post-processing result
+    return postAsync(shared, prepResult, null);
   }
 
   @override
   /// Creates a deep copy of this [AsyncParallelBatchFlow].
-  AsyncParallelBatchFlow<TIn, TOut> clone() {
-    final clonedNodes = nodes.map((node) => node.clone()).toList();
-    return AsyncParallelBatchFlow<TIn, TOut>(
-        clonedNodes,
-        copySharedForParallel: copySharedForParallel,
-      )
-      ..name = name
-      ..params = Map.from(params);
+  AsyncParallelBatchFlow clone() {
+    return super.copy(AsyncParallelBatchFlow.new);
   }
 }

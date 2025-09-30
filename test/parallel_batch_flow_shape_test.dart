@@ -21,9 +21,9 @@ class EchoNode extends Node {
 
 void main() {
   test(
-    'AsyncParallelBatchFlow returns list-of-results and is documented',
+    'ParallelNodeBatchFlow returns list-of-results and is documented',
     () async {
-      final flow = AsyncParallelBatchFlow<Map<String, int>, List<dynamic>>([
+      final flow = ParallelNodeBatchFlow<Map<String, int>, List<dynamic>>([
         EchoNode(),
       ]);
       final res = await flow.call([

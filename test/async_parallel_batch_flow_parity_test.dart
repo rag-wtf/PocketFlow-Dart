@@ -1,33 +1,37 @@
-// import 'package:pocketflow/pocketflow.dart';
-// import 'package:test/test.dart';
+// Tests for AsyncParallelBatchFlow parity with Python implementation
+// These tests verify that Dart's AsyncParallelBatchFlow matches Python's
+// behavior of running the flow multiple times in parallel with different
+// parameters.
 
-/*
+// The `>>` operator is used for its side effects of building the flow graph.
+// The analyzer doesn't recognize this and flags it as an unnecessary statement.
+// ignore_for_file: unnecessary_statements
+
+import 'package:pocketflow/pocketflow.dart';
+import 'package:test/test.dart';
+
 // Processes a batch of numbers asynchronously and in parallel.
-class AsyncParallelNumberProcessor extends Node {
+class AsyncParallelNumberProcessor extends AsyncParallelBatchNode<int, int> {
   AsyncParallelNumberProcessor({
     this.delay = const Duration(milliseconds: 100),
   });
   final Duration delay;
 
   @override
-  Future<List<int>> prep(Map<String, dynamic> sharedStorage) async {
+  Future<List<int>> prepAsync(Map<String, dynamic> sharedStorage) async {
     final batchId = params['batch_id'] as int;
     final batches = sharedStorage['batches'] as List<List<int>>;
     return batches[batchId];
   }
 
   @override
-  Future<List<int>> exec(dynamic prepResult) async {
-    final numbers = prepResult as List<int>;
-    final futures = numbers.map((number) async {
-      await Future<void>.delayed(delay);
-      return number * 2;
-    });
-    return Future.wait(futures);
+  Future<int> execAsyncItem(int number) async {
+    await Future<void>.delayed(delay);
+    return number * 2;
   }
 
   @override
-  Future<String> post(
+  Future<String> postAsync(
     Map<String, dynamic> sharedStorage,
     dynamic prepResult,
     dynamic execResult,
@@ -81,16 +85,180 @@ class AsyncAggregatorNode extends AsyncNode {
   @override
   BaseNode createInstance() => AsyncAggregatorNode();
 }
-*/
+
+// Custom AsyncParallelBatchFlow for testing
+class TestParallelBatchFlow extends AsyncParallelBatchFlow {
+  TestParallelBatchFlow({required super.start});
+
+  @override
+  Future<List<Map<String, dynamic>>> prepAsync(
+    Map<String, dynamic> shared,
+  ) async {
+    final batches = shared['batches'] as List<List<int>>;
+    return [
+      for (var i = 0; i < batches.length; i++) {'batch_id': i},
+    ];
+  }
+}
+
+class ErrorProcessor extends AsyncParallelNumberProcessor {
+  ErrorProcessor({super.delay});
+
+  @override
+  Future<int> execAsyncItem(int item) async {
+    if (item == 2) {
+      throw Exception('Error processing item 2');
+    }
+    return item;
+  }
+
+  @override
+  BaseNode createInstance() => ErrorProcessor(delay: delay);
+}
+
+class ErrorBatchFlow extends AsyncParallelBatchFlow {
+  ErrorBatchFlow({required super.start});
+
+  @override
+  Future<List<Map<String, dynamic>>> prepAsync(
+    Map<String, dynamic> shared,
+  ) async {
+    final batches = shared['batches'] as List<List<int>>;
+    return [
+      for (var i = 0; i < batches.length; i++) {'batch_id': i},
+    ];
+  }
+}
+
+class VaryingBatchFlow extends AsyncParallelBatchFlow {
+  VaryingBatchFlow({required super.start});
+
+  @override
+  Future<List<Map<String, dynamic>>> prepAsync(
+    Map<String, dynamic> shared,
+  ) async {
+    final batches = shared['batches'] as List<List<int>>;
+    return [
+      for (var i = 0; i < batches.length; i++) {'batch_id': i},
+    ];
+  }
+}
 
 void main() {
-  // Note: The original parity tests were removed because they tested
-  // Python-specific AsyncParallelBatchFlow behavior that differs from Dart's
-  // implementation. The tests incorrectly assumed that shared state was being
-  // copied, when in fact the issue was with the test design itself.
-  //
-  // The actual AsyncParallelBatchFlow functionality is thoroughly tested in:
-  // - test/src/async_parallel_batch_flow_test.dart
-  // - test/async_parallel_batch_node_parity_test.dart
-  // - test/parallel_shared_race_test.dart
+  group('AsyncParallelBatchFlow Parity Tests', () {
+    test('Parallel batch flow', () async {
+      final sharedStorage = <String, dynamic>{
+        'batches': [
+          [1, 2, 3], // batch_id: 0
+          [4, 5, 6], // batch_id: 1
+          [7, 8, 9], // batch_id: 2
+        ],
+      };
+
+      final processor = AsyncParallelNumberProcessor(
+        delay: const Duration(milliseconds: 100),
+      );
+      final aggregator = AsyncAggregatorNode();
+
+      processor - 'processed' >> aggregator;
+      final flow = TestParallelBatchFlow(start: processor);
+
+      final stopwatch = Stopwatch()..start();
+      await flow.runAsync(sharedStorage);
+      stopwatch.stop();
+
+      // Verify each batch was processed correctly
+      final expectedBatchResults = {
+        0: [2, 4, 6], // [1,2,3] * 2
+        1: [8, 10, 12], // [4,5,6] * 2
+        2: [14, 16, 18], // [7,8,9] * 2
+      };
+      expect(
+        sharedStorage['processed_numbers'],
+        equals(expectedBatchResults),
+      );
+
+      // Verify total
+      final expectedTotal = [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+      ].fold<int>(0, (sum, num) => sum + (num * 2));
+      expect(sharedStorage['total'], equals(expectedTotal));
+
+      // Verify parallel execution (should be < 200ms for 3 batches)
+      expect(stopwatch.elapsedMilliseconds, lessThan(200));
+    });
+
+    test('Error handling in parallel batch flow', () async {
+      final sharedStorage = <String, dynamic>{
+        'batches': [
+          [1, 2, 3], // Contains error-triggering value
+          [4, 5, 6],
+        ],
+      };
+
+      final processor = ErrorProcessor();
+      final flow = ErrorBatchFlow(start: processor);
+
+      expect(
+        () => flow.runAsync(sharedStorage),
+        throwsException,
+      );
+    });
+
+    test('Multiple batch sizes', () async {
+      final sharedStorage = <String, dynamic>{
+        'batches': [
+          [1], // batch_id: 0
+          [2, 3, 4], // batch_id: 1
+          [5, 6], // batch_id: 2
+          [7, 8, 9, 10], // batch_id: 3
+        ],
+      };
+
+      final processor = AsyncParallelNumberProcessor(
+        delay: const Duration(milliseconds: 50),
+      );
+      final aggregator = AsyncAggregatorNode();
+
+      processor - 'processed' >> aggregator;
+      final flow = VaryingBatchFlow(start: processor);
+
+      await flow.runAsync(sharedStorage);
+
+      // Verify each batch was processed correctly
+      final expectedBatchResults = {
+        0: [2], // [1] * 2
+        1: [4, 6, 8], // [2,3,4] * 2
+        2: [10, 12], // [5,6] * 2
+        3: [14, 16, 18, 20], // [7,8,9,10] * 2
+      };
+      expect(
+        sharedStorage['processed_numbers'],
+        equals(expectedBatchResults),
+      );
+
+      // Verify total
+      final expectedTotal = [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+      ].fold<int>(0, (sum, num) => sum + (num * 2));
+      expect(sharedStorage['total'], equals(expectedTotal));
+    });
+  });
 }
