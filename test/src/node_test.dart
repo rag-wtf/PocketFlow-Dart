@@ -13,8 +13,13 @@ class NumberNode extends Node {
   }
 
   @override
-  Node clone() {
-    return NumberNode(number)..params = Map.from(params);
+  BaseNode createInstance() {
+    return NumberNode(number);
+  }
+
+  @override
+  NumberNode clone() {
+    return super.clone() as NumberNode;
   }
 }
 
@@ -28,8 +33,13 @@ class AddNode extends Node {
   }
 
   @override
-  Node clone() {
-    return AddNode(number)..params = Map.from(params);
+  BaseNode createInstance() {
+    return AddNode(number);
+  }
+
+  @override
+  AddNode clone() {
+    return super.clone() as AddNode;
   }
 }
 

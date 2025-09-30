@@ -1,4 +1,4 @@
-import 'package:pocketflow/pocketflow.dart';
+import 'package:pocketflow/pocketflow_extensions.dart';
 import 'package:test/test.dart';
 
 // A mutable node for testing the deep cloning of the flow.
@@ -12,7 +12,7 @@ class _MutableNode extends BaseNode {
   }
 
   @override
-  BaseNode clone() {
+  BaseNode createInstance() {
     return _MutableNode(factor);
   }
 }
@@ -21,11 +21,11 @@ void main() {
   group('ParallelNodeBatchFlow', () {
     test('should process a batch of inputs in parallel', () async {
       final flow = ParallelNodeBatchFlow<int, int>([
-        AsyncNode(
+        SimpleAsyncNode(
           (dynamic r) async =>
               ((r as Map<String, dynamic>)['input'] as int) * 2,
         ),
-        AsyncNode(
+        SimpleAsyncNode(
           (dynamic r) async =>
               ((r as Map<String, dynamic>)['input'] as int) * 3,
         ),
@@ -57,7 +57,7 @@ void main() {
     group('run', () {
       test('should throw an ArgumentError if "input" key is missing', () {
         final flow = ParallelNodeBatchFlow<int, int>([
-          AsyncNode((r) async => 1),
+          SimpleAsyncNode((dynamic r) async => 1),
         ]);
         expect(
           () => flow.run({}), // Empty shared map
@@ -75,7 +75,7 @@ void main() {
 
       test('should throw an ArgumentError if "input" is not a List', () {
         final flow = ParallelNodeBatchFlow<int, int>([
-          AsyncNode((r) async => 1),
+          SimpleAsyncNode((dynamic r) async => 1),
         ]);
         expect(
           () => flow.run({'input': 'not a list'}), // Input is not a list

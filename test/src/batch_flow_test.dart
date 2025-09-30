@@ -26,8 +26,13 @@ class MultiplyNode extends Node {
   }
 
   @override
-  Node clone() {
-    return MultiplyNode(factor)..params = Map.from(params);
+  BaseNode createInstance() {
+    return MultiplyNode(factor);
+  }
+
+  @override
+  MultiplyNode clone() {
+    return super.clone() as MultiplyNode;
   }
 }
 
@@ -69,9 +74,14 @@ void main() {
 
       final flow = BatchFlow<int, int>([multiplyNode, addNode]);
       final inputs = [1, 2, 3];
-      final outputs = await flow.run({'items': inputs});
+      final shared = <String, dynamic>{'items': inputs};
+      final outputs = await flow.run(shared);
 
-      expect(outputs, equals([3, 5, 7]));
+      // Python parity: BatchFlow returns post(..., exec_res=null)
+      expect(outputs, isNull);
+
+      // Verify the flow processed all items by checking final shared state
+      expect(shared['value'], equals(7)); // Last processed value: ((3 * 2) + 1)
     });
 
     group('constructor', () {
@@ -130,16 +140,21 @@ void main() {
       originalNode.valueToAdd = 5;
 
       // Run original flow, should use the modified value
-      final originalOutput = await originalFlow.run({
+      final originalShared = <String, dynamic>{
         'items': [10, 20],
-      });
-      expect(originalOutput, equals([15, 25]));
+      };
+      final originalOutput = await originalFlow.run(originalShared);
+      // Python parity: BatchFlow returns post(..., exec_res=null)
+      expect(originalOutput, isNull);
+      expect(originalShared['value'], equals(25)); // Last processed: 20 + 5
 
       // Run cloned flow, should use the original value
-      final clonedOutput = await clonedFlow.run({
+      final clonedShared = <String, dynamic>{
         'items': [10, 20],
-      });
-      expect(clonedOutput, equals([11, 21]));
+      };
+      final clonedOutput = await clonedFlow.run(clonedShared);
+      expect(clonedOutput, isNull);
+      expect(clonedShared['value'], equals(21)); // Last processed: 20 + 1
     });
   });
 }

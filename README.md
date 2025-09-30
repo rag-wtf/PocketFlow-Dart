@@ -6,6 +6,15 @@
 
 A minimalist LLM framework, ported from Python to Dart.
 
+## Core vs Extensions
+
+This library provides two import options:
+
+- **`package:pocketflow/pocketflow.dart`** - Core classes that mirror the Python PocketFlow implementation
+- **`package:pocketflow/pocketflow_extensions.dart`** - Core classes plus Dart-specific convenience extensions
+
+For most use cases, start with the core library. See [EXTENSIONS.md](lib/EXTENSIONS.md) for details on the additional Dart-specific patterns available in the extensions library.
+
 ## Installation 💻
 
 **❗ In order to start using Pocketflow you must have the [Dart SDK][dart_install_link] installed on your machine.**

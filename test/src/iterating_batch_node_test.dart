@@ -1,4 +1,4 @@
-import 'package:pocketflow/pocketflow.dart';
+import 'package:pocketflow/pocketflow_extensions.dart';
 import 'package:test/test.dart';
 
 // A mock implementation of IteratingBatchNode to test its functionalities.
@@ -14,10 +14,13 @@ class MockIteratingBatchNode extends IteratingBatchNode<int, int> {
   }
 
   @override
-  IteratingBatchNode<int, int> clone() {
-    return MockIteratingBatchNode()
-      ..name = name
-      ..params = Map.from(params);
+  BaseNode createInstance() {
+    return MockIteratingBatchNode();
+  }
+
+  @override
+  MockIteratingBatchNode clone() {
+    return super.clone() as MockIteratingBatchNode;
   }
 }
 
@@ -109,7 +112,7 @@ void main() {
         ..name = 'TestIteratingNode'
         ..params['value'] = 123;
 
-      final clonedNode = node.clone() as MockIteratingBatchNode;
+      final clonedNode = node.clone();
 
       expect(clonedNode, isA<MockIteratingBatchNode>());
       expect(clonedNode.name, equals('TestIteratingNode'));

@@ -1,9 +1,9 @@
-import 'package:pocketflow/pocketflow.dart';
+import 'package:pocketflow/pocketflow_extensions.dart';
 import 'package:test/test.dart';
 
-class AsyncAddNode extends AsyncNode {
+class AsyncAddNode extends SimpleAsyncNode {
   AsyncAddNode()
-    : super((params) async {
+    : super((dynamic params) async {
         await Future<void>.delayed(Duration.zero);
         final p = params as Map<String, dynamic>;
         final a = p['a'] as int;
@@ -29,7 +29,7 @@ class AsyncBatchAddNode extends AsyncBatchNode<List<int>, List<int>> {
 void main() {
   group('Async Processing Benchmark', () {
     test('AsyncNode Execution', () async {
-      final node = AsyncNode((params) async {
+      final node = SimpleAsyncNode((dynamic params) async {
         final p = params as Map<String, dynamic>;
         final a = p['a'] as int;
         final b = p['b'] as int;
@@ -140,7 +140,7 @@ void main() {
 
     test('ParallelNodeBatchFlow Orchestration', () async {
       final flow = ParallelNodeBatchFlow<Map<String, List<int>>, List<int>>([
-        AsyncNode((params) async {
+        SimpleAsyncNode((dynamic params) async {
           final p = params as Map<String, dynamic>;
           final item = p['input'] as Map<String, List<int>>;
           final a = item['a']!;
@@ -151,7 +151,7 @@ void main() {
           }
           return c;
         })..name = 'add1',
-        AsyncNode((params) async {
+        SimpleAsyncNode((dynamic params) async {
           final p = params as Map<String, dynamic>;
           final item = p['input'] as Map<String, List<int>>;
           final a = item['a']!;

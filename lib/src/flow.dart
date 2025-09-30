@@ -23,6 +23,118 @@ class Flow extends BaseNode {
     return node;
   }
 
+  /// Gets the next node based on the current node and action.
+  ///
+  /// This method implements Python's action-based transition logic.
+  ///
+  /// Logic:
+  /// 1. If [action] is a String, it looks for a successor with that key.
+  /// 2. If [action] is not a String (e.g., null), it looks for 'default'.
+  /// 3. If no successor is found for the determined key, the flow ends.
+  BaseNode? getNextNode(BaseNode curr, dynamic action) {
+    BaseNode? next;
+    // Determine the key to look for in the successors map.
+    // If action is a string, use it. Otherwise, use 'default'.
+    final actionToFind = (action is String) ? action : 'default';
+
+    if (curr.successors.containsKey(actionToFind)) {
+      next = curr.successors[actionToFind];
+    } else {
+      next = null; // No successor found for the action.
+    }
+
+    // Log a warning if the flow terminates but other paths were available.
+    // This is useful for debugging and mirrors Python's behavior.
+    if (next == null && curr.successors.isNotEmpty) {
+      // We only log if the specific action we were looking for was not found.
+      if (!curr.successors.containsKey(actionToFind)) {
+        curr.log(
+          "Warning: Flow ends: '$action' not found in "
+          '${curr.successors.keys.toList()}',
+        );
+      }
+    }
+
+    return next;
+  }
+
+  /// Core orchestration method that executes the flow graph.
+  ///
+  /// This method implements Python's _orch pattern:
+  /// 1. Clone the start node
+  /// 2. Set parameters (merged with flow params)
+  /// 3. Execute nodes in sequence based on action-based transitions
+  /// 4. Return the last action/result
+  ///
+  /// Matches Python's implementation:
+  /// ```python
+  /// def _orch(self,shared,params=None):
+  ///     curr,p,last_action =copy.copy(self.start_node),
+  ///                         (params or {**self.params}),None
+  ///     while curr:
+  ///         curr.set_params(p); last_action=curr._run(shared)
+  ///         curr=copy.copy(self.get_next_node(curr,last_action))
+  ///     return last_action
+  /// ```
+  Future<dynamic> orch(
+    Map<String, dynamic> shared, [
+    Map<String, dynamic>? params,
+    int? maxSteps,
+  ]) async {
+    if (_start == null) {
+      throw StateError('The start node has not been set.');
+    }
+
+    final clonedNodes = <BaseNode, BaseNode>{};
+    final namedNodes = <String, BaseNode>{};
+    var curr = _cloneNode(_start, clonedNodes, namedNodes);
+
+    // Merge flow params with provided params (provided params take precedence)
+    final p = params ?? <String, dynamic>{...this.params};
+
+    // Handle node-specific parameters
+    final nodeParams =
+        shared['__node_params__'] as Map<String, Map<String, dynamic>>?;
+    if (nodeParams != null) {
+      for (final entry in nodeParams.entries) {
+        final nodeName = entry.key;
+        final nodeSpecificParams = entry.value;
+        if (namedNodes.containsKey(nodeName)) {
+          namedNodes[nodeName]!.params.addAll(nodeSpecificParams);
+        }
+      }
+    }
+
+    dynamic lastAction;
+    var stepCount = 0;
+
+    while (curr != null) {
+      // Check maxSteps guard to prevent infinite loops
+      if (maxSteps != null && stepCount >= maxSteps) {
+        throw StateError(
+          'Flow orchestration exceeded maxSteps limit of $maxSteps. '
+          'This may indicate an infinite loop in the flow.',
+        );
+      }
+
+      // Set parameters on current node
+      curr.params.addAll(p);
+
+      // Execute current node
+      lastAction = await curr.run(shared);
+
+      // Get next node based on action
+      curr = getNextNode(curr, lastAction);
+      if (curr != null) {
+        curr = _cloneNode(curr, clonedNodes, namedNodes);
+      }
+
+      stepCount++;
+    }
+
+    return lastAction;
+  }
+
   /// Clones a node and its successors recursively.
   BaseNode? _cloneNode(
     BaseNode? originalNode,
@@ -55,53 +167,42 @@ class Flow extends BaseNode {
   }
 
   @override
-  /// Executes the flow.
+  /// The main execution logic for the flow.
   ///
-  /// This method clones the entire flow, including all nodes, to ensure that
-  /// each execution is isolated. It then traverses the graph, executing each
-  /// node in sequence.
+  /// This method implements Python's Flow pattern where exec calls _orch.
+  /// It orchestrates the execution of the flow graph using the orch method.
   ///
-  /// The [shared] map is passed to each node, allowing them to share data.
+  /// Matches Python's pattern:
+  /// ```python
+  /// def _run(self,shared):
+  ///     p=self.prep(shared); o=self._orch(shared)
+  ///     return self.post(shared,p,o)
+  /// ```
+  Future<dynamic> exec(dynamic prepResult) async {
+    return orch(shared);
+  }
+
+  /// Shared storage reference for use in exec method.
+  /// This is set by the run method before calling exec.
+  late Map<String, dynamic> shared;
+
+  @override
+  /// Executes the flow following the Node lifecycle pattern.
   ///
-  /// Returns the result of the last executed node.
+  /// This method follows Python's Flow pattern:
+  /// 1. Calls prep(shared) to prepare
+  /// 2. Calls exec(prepResult) which calls orch(shared)
+  /// 3. Calls post(shared, prepResult, execResult)
+  ///
+  /// This aligns with Python's _run method in Flow.
   Future<dynamic> run(Map<String, dynamic> shared) async {
-    if (_start == null) {
-      throw StateError('The start node has not been set.');
-    }
+    // Store shared for use in exec method
+    this.shared = shared;
 
-    final clonedNodes = <BaseNode, BaseNode>{};
-    final namedNodes = <String, BaseNode>{};
-    final clonedStart = _cloneNode(_start, clonedNodes, namedNodes);
-
-    final nodeParams =
-        shared['__node_params__'] as Map<String, Map<String, dynamic>>?;
-    if (nodeParams != null) {
-      for (final entry in nodeParams.entries) {
-        final nodeName = entry.key;
-        final params = entry.value;
-        if (namedNodes.containsKey(nodeName)) {
-          namedNodes[nodeName]!.params.addAll(params);
-        }
-      }
-    }
-
-    var currentNode = clonedStart;
-    dynamic lastResult;
-
-    while (currentNode != null) {
-      lastResult = await currentNode.run(shared);
-
-      if (lastResult is String &&
-          currentNode.successors.containsKey(lastResult)) {
-        currentNode = currentNode.successors[lastResult];
-      } else if (currentNode.successors.containsKey('default')) {
-        currentNode = currentNode.successors['default'];
-      } else {
-        currentNode = null;
-      }
-    }
-
-    return lastResult;
+    // Follow the Node lifecycle: prep -> exec -> post
+    final prepResult = await prep(shared);
+    final execResult = await exec(prepResult);
+    return post(shared, prepResult, execResult);
   }
 
   /// Creates a deep copy of this [Flow].
@@ -120,6 +221,12 @@ class Flow extends BaseNode {
     }
 
     return clonedFlow;
+  }
+
+  @override
+  /// Creates a new instance of Flow.
+  BaseNode createInstance() {
+    return Flow();
   }
 
   @override

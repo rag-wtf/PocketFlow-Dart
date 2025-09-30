@@ -15,7 +15,11 @@ class AsyncParallelBatchFlow<TIn, TOut> extends AsyncFlow {
   ///
   /// The [nodes] parameter is a list of [BaseNode] instances that will be
   /// executed in parallel for each item in the batch.
-  AsyncParallelBatchFlow(this.nodes) {
+  ///
+  /// The [copySharedForParallel] parameter controls whether the shared state
+  /// is copied for each parallel task to avoid race conditions. Defaults to
+  /// true for safety.
+  AsyncParallelBatchFlow(this.nodes, {this.copySharedForParallel = true}) {
     if (nodes.isEmpty) {
       throw ArgumentError('The list of nodes cannot be empty.');
     }
@@ -23,6 +27,10 @@ class AsyncParallelBatchFlow<TIn, TOut> extends AsyncFlow {
 
   /// The list of nodes to be executed in parallel for each item.
   final List<BaseNode> nodes;
+
+  /// Whether to copy the shared state for each parallel task to avoid race
+  /// conditions. Defaults to true for safety.
+  final bool copySharedForParallel;
 
   /// Executes the flow with a given list of [items].
   ///
@@ -56,8 +64,26 @@ class AsyncParallelBatchFlow<TIn, TOut> extends AsyncFlow {
     final batchFutures = items.map((item) {
       final nodeFutures = nodes.map((node) {
         final clonedNode = node.clone();
-        // Each node runs with the same item from the batch as input.
-        return clonedNode.run({'input': item});
+
+        if (copySharedForParallel) {
+          // Create a copy of shared state for this parallel task
+          final sharedForTask = Map<String, dynamic>.from(shared);
+          sharedForTask['input'] = item;
+          return clonedNode.run(sharedForTask);
+        } else {
+          // Use the original shared state (potential race condition)
+          // Temporarily set the item in the shared state
+          final originalInput = shared['input'];
+          shared['input'] = item;
+          final future = clonedNode.run(shared);
+          // Restore original input after starting the task
+          if (originalInput != null) {
+            shared['input'] = originalInput;
+          } else {
+            shared.remove('input');
+          }
+          return future;
+        }
       });
       return Future.wait(nodeFutures);
     });
@@ -69,7 +95,10 @@ class AsyncParallelBatchFlow<TIn, TOut> extends AsyncFlow {
   /// Creates a deep copy of this [AsyncParallelBatchFlow].
   AsyncParallelBatchFlow<TIn, TOut> clone() {
     final clonedNodes = nodes.map((node) => node.clone()).toList();
-    return AsyncParallelBatchFlow<TIn, TOut>(clonedNodes)
+    return AsyncParallelBatchFlow<TIn, TOut>(
+        clonedNodes,
+        copySharedForParallel: copySharedForParallel,
+      )
       ..name = name
       ..params = Map.from(params);
   }

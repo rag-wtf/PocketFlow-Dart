@@ -33,6 +33,9 @@ class ConditionalTransition {
 /// to form a directed acyclic graph (DAG). Each node has a `prep` method for
 /// pre-processing, an `exec` method for the main execution logic, and a `post`
 /// method for post-processing.
+///
+/// This base class provides synchronous operations as the primary interface,
+/// matching Python's design where sync operations are the default.
 abstract class BaseNode {
   /// The unique name of the node.
   ///
@@ -158,6 +161,23 @@ abstract class BaseNode {
 
   /// Creates a copy of the node.
   ///
-  /// Subclasses should implement this method to support cloning of nodes.
-  BaseNode clone();
+  /// This method implements proper deep cloning using the factory pattern.
+  /// It creates a new instance using [createInstance] and copies all
+  /// properties except successors (which are handled by Flow).
+  ///
+  /// Matches Python's copy.copy() behavior but with explicit cloning.
+  BaseNode clone() {
+    return createInstance()
+      ..params = Map<String, dynamic>.from(params)
+      ..name = name
+      ..log = log;
+    // Don't clone successors here - Flow handles that
+  }
+
+  /// Abstract factory method for creating new instances.
+  ///
+  /// Subclasses must implement this method to return a new instance
+  /// of the correct type with the same constructor parameters.
+  /// This enables the base clone() method to work for all node types.
+  BaseNode createInstance();
 }

@@ -4,7 +4,7 @@ import 'package:test/test.dart';
 // A simple implementation of BaseNode for testing.
 class TestNode extends BaseNode {
   @override
-  BaseNode clone() => TestNode();
+  BaseNode createInstance() => TestNode();
 }
 
 void main() {
