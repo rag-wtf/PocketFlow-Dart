@@ -10,7 +10,7 @@ import 'package:test/test.dart';
 Future<void> runAsyncBatchFlow({
   required BaseNode start,
   required Future<List<Map<String, dynamic>>> Function(Map<String, dynamic>)
-      prep,
+  prep,
   required Map<String, dynamic> shared,
 }) async {
   final inputs = await prep(shared);
@@ -28,8 +28,7 @@ class AsyncDataProcessNode extends AsyncNode {
   @override
   Future<dynamic> prep(Map<String, dynamic> sharedStorage) async {
     final key = params['key'] as String;
-    final data =
-        (sharedStorage['input_data'] as Map<String, dynamic>)[key];
+    final data = (sharedStorage['input_data'] as Map<String, dynamic>)[key];
     return data;
   }
 
@@ -83,8 +82,7 @@ class _InnerNode extends AsyncNode {
       sharedStorage['intermediate_results'] = <String, dynamic>{};
     }
     (sharedStorage['intermediate_results'] as Map<String, dynamic>)[key] =
-        ((sharedStorage['input_data'] as Map<String, dynamic>)[key] as int) +
-            1;
+        ((sharedStorage['input_data'] as Map<String, dynamic>)[key] as int) + 1;
     sharedStorage['current_key'] =
         key; // Pass key to next node via shared state
     await Future<void>.delayed(const Duration(milliseconds: 10));
@@ -108,8 +106,8 @@ class _OuterNode extends AsyncNode {
     }
     (sharedStorage['results'] as Map<String, dynamic>)[key] =
         ((sharedStorage['intermediate_results'] as Map<String, dynamic>)[key]
-                as int) *
-            2;
+            as int) *
+        2;
     await Future<void>.delayed(const Duration(milliseconds: 10));
     return 'done';
   }
@@ -133,7 +131,7 @@ class _CustomParamNode extends AsyncNode {
     }
     (sharedStorage['results'] as Map<String, dynamic>)[key] =
         ((sharedStorage['input_data'] as Map<String, dynamic>)[key] as int) *
-            multiplier;
+        multiplier;
     return 'done';
   }
 
@@ -267,7 +265,8 @@ void main() {
         expect(sharedStorage['results'], equals(expectedResults));
       });
     },
-    skip: 'Skipping due to state isolation in the runAsyncBatchFlow helper '
+    skip:
+        'Skipping due to state isolation in the runAsyncBatchFlow helper '
         'function.',
   );
 }

@@ -99,7 +99,8 @@ void main() {
       // inside the node's `prep` method are not reflected in the original
       // `sharedStorage` map after the run completes.
     },
-    skip: 'Skipping due to differences in state management between Dart and '
+    skip:
+        'Skipping due to differences in state management between Dart and '
         'Python nodes.',
   );
 
@@ -112,7 +113,8 @@ void main() {
       // visible outside the flow, which is a key difference from the Python
       // implementation these tests were based on.
     },
-    skip: 'Skipping due to differences in state management between Dart and '
+    skip:
+        'Skipping due to differences in state management between Dart and '
         'Python flows.',
   );
 }

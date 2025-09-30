@@ -46,7 +46,7 @@ class _CustomParamNode extends Node {
     }
     (sharedStorage['results'] as Map<String, dynamic>)[key] =
         ((sharedStorage['input_data'] as Map<String, dynamic>)[key] as int) *
-            multiplier;
+        multiplier;
   }
 
   @override
@@ -83,8 +83,7 @@ void main() {
 
       await runBatchFlow(
         start: processNode,
-        prep: (shared) => (shared['input_data'] as Map<String, dynamic>)
-            .keys
+        prep: (shared) => (shared['input_data'] as Map<String, dynamic>).keys
             .map<Map<String, dynamic>>((k) => {'key': k})
             .toList(),
         shared: sharedStorage,
@@ -99,8 +98,7 @@ void main() {
 
       await runBatchFlow(
         start: processNode,
-        prep: (shared) => (shared['input_data'] as Map<String, dynamic>)
-            .keys
+        prep: (shared) => (shared['input_data'] as Map<String, dynamic>).keys
             .map<Map<String, dynamic>>((k) => {'key': k})
             .toList(),
         shared: sharedStorage,
@@ -117,8 +115,7 @@ void main() {
 
       await runBatchFlow(
         start: processNode,
-        prep: (shared) => (shared['input_data'] as Map<String, dynamic>)
-            .keys
+        prep: (shared) => (shared['input_data'] as Map<String, dynamic>).keys
             .map<Map<String, dynamic>>((k) => {'key': k})
             .toList(),
         shared: sharedStorage,
@@ -136,8 +133,7 @@ void main() {
 
       final future = runBatchFlow(
         start: ErrorProcessNode(),
-        prep: (shared) => (shared['input_data'] as Map<String, dynamic>)
-            .keys
+        prep: (shared) => (shared['input_data'] as Map<String, dynamic>).keys
             .map<Map<String, dynamic>>((k) => {'key': k})
             .toList(),
         shared: sharedStorage,
@@ -170,8 +166,8 @@ void main() {
       await runBatchFlow(
         start: customParamNode,
         prep: (shared) {
-          final keys =
-              (shared['input_data'] as Map<String, dynamic>).keys.toList();
+          final keys = (shared['input_data'] as Map<String, dynamic>).keys
+              .toList();
           return [
             for (var i = 0; i < keys.length; i++)
               {'key': keys[i], 'multiplier': i + 2},

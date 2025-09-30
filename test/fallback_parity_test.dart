@@ -98,8 +98,8 @@ class AsyncFallbackNode extends AsyncNode {
 class _ResultNode extends Node {
   @override
   Future<dynamic> prep(Map<String, dynamic> sharedStorage) async {
-    return (sharedStorage['results'] as List<Map<String, dynamic>>)[0]
-        ['result'];
+    return (sharedStorage['results']
+        as List<Map<String, dynamic>>)[0]['result'];
   }
 
   @override
@@ -123,8 +123,8 @@ class _ResultNode extends Node {
 class _AsyncResultNode extends AsyncNode {
   @override
   Future<dynamic> prep(Map<String, dynamic> sharedStorage) async {
-    return (sharedStorage['results'] as List<Map<String, dynamic>>)[0]
-        ['result'];
+    return (sharedStorage['results']
+        as List<Map<String, dynamic>>)[0]['result'];
   }
 
   @override
