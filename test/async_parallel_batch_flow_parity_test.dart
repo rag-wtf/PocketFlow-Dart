@@ -88,7 +88,7 @@ class AsyncAggregatorNode extends AsyncNode {
 
 // Custom AsyncParallelBatchFlow for testing
 class TestParallelBatchFlow extends AsyncParallelBatchFlow {
-  TestParallelBatchFlow({required super.start});
+  TestParallelBatchFlow({super.start});
 
   @override
   Future<List<Map<String, dynamic>>> prepAsync(
@@ -98,6 +98,11 @@ class TestParallelBatchFlow extends AsyncParallelBatchFlow {
     return [
       for (var i = 0; i < batches.length; i++) {'batch_id': i},
     ];
+  }
+
+  @override
+  TestParallelBatchFlow clone() {
+    return super.copy(TestParallelBatchFlow.new);
   }
 }
 
@@ -117,7 +122,7 @@ class ErrorProcessor extends AsyncParallelNumberProcessor {
 }
 
 class ErrorBatchFlow extends AsyncParallelBatchFlow {
-  ErrorBatchFlow({required super.start});
+  ErrorBatchFlow({super.start});
 
   @override
   Future<List<Map<String, dynamic>>> prepAsync(
@@ -128,10 +133,15 @@ class ErrorBatchFlow extends AsyncParallelBatchFlow {
       for (var i = 0; i < batches.length; i++) {'batch_id': i},
     ];
   }
+
+  @override
+  ErrorBatchFlow clone() {
+    return super.copy(ErrorBatchFlow.new);
+  }
 }
 
 class VaryingBatchFlow extends AsyncParallelBatchFlow {
-  VaryingBatchFlow({required super.start});
+  VaryingBatchFlow({super.start});
 
   @override
   Future<List<Map<String, dynamic>>> prepAsync(
@@ -141,6 +151,11 @@ class VaryingBatchFlow extends AsyncParallelBatchFlow {
     return [
       for (var i = 0; i < batches.length; i++) {'batch_id': i},
     ];
+  }
+
+  @override
+  VaryingBatchFlow clone() {
+    return super.copy(VaryingBatchFlow.new);
   }
 }
 
@@ -259,4 +274,67 @@ void main() {
       expect(sharedStorage['total'], equals(expectedTotal));
     });
   });
+
+  test('Handles null from prepAsync', () async {
+    // A flow where prepAsync returns null
+    final flow = NullPrepFlow(start: AsyncAggregatorNode());
+    final shared = <String, dynamic>{};
+
+    // Should run without errors
+    await flow.runAsync(shared);
+
+    // No processing should happen, total should not be set
+    expect(shared.containsKey('total'), isFalse);
+  });
+
+  test('Clones the flow correctly', () async {
+    final processor = AsyncParallelNumberProcessor();
+    final aggregator = AsyncAggregatorNode();
+    processor - 'processed' >> aggregator;
+
+    final originalFlow = TestParallelBatchFlow(start: processor);
+
+    // Clone the flow
+    final clonedFlow = originalFlow.clone();
+
+    expect(clonedFlow, isNot(same(originalFlow)));
+    expect(clonedFlow, isA<TestParallelBatchFlow>());
+
+    final shared = <String, dynamic>{
+      'batches': [
+        [1, 2],
+      ],
+    };
+
+    // Run the cloned flow
+    await clonedFlow.runAsync(shared);
+
+    // Verify the result
+    final expectedTotal = [1, 2].fold<int>(0, (sum, n) => sum + (n * 2));
+    expect(shared['total'], equals(expectedTotal));
+  });
+
+  test('Base AsyncParallelBatchFlow can be cloned', () {
+    final flow = AsyncParallelBatchFlow(start: AsyncAggregatorNode());
+    final cloned = flow.clone();
+    expect(cloned, isNot(same(flow)));
+    expect(cloned, isA<AsyncParallelBatchFlow>());
+  });
+}
+
+// A flow that returns null from prepAsync to test null safety.
+class NullPrepFlow extends AsyncParallelBatchFlow {
+  NullPrepFlow({super.start});
+
+  @override
+  Future<List<Map<String, dynamic>>?> prepAsync(
+    Map<String, dynamic> shared,
+  ) async {
+    return null;
+  }
+
+  @override
+  NullPrepFlow clone() {
+    return super.copy(NullPrepFlow.new);
+  }
 }

@@ -88,4 +88,24 @@ void main() {
       });
     });
   });
+
+  group('AsyncFlow default implementations', () {
+    test('postAsync should return execResult by default', () async {
+      final flow = _ConcreteAsyncFlow(
+        start: SimpleAsyncNode((_) async => 'exec_result'),
+      );
+      final result = await flow.runAsync({});
+      expect(result, 'exec_result');
+    });
+
+    test('execFallbackAsync should return null by default', () async {
+      final flow = _ConcreteAsyncFlow();
+      final result = await flow.execFallbackAsync(null, Exception('test'));
+      expect(result, isNull);
+    });
+  });
+}
+
+class _ConcreteAsyncFlow extends AsyncFlow {
+  _ConcreteAsyncFlow({super.start});
 }

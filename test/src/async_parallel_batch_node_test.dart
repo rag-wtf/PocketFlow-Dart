@@ -54,6 +54,29 @@ void main() {
       expect(() => node.run(shared), throwsA(isA<String>()));
     });
 
+    test(
+      'should throw UnimplementedError if execAsyncItem is not implemented',
+      () {
+        final node = AsyncParallelBatchNode<int, int>()
+          ..params['items'] = [1, 2, 3];
+        expect(
+          () => node.run({}),
+          throwsA(isA<UnimplementedError>()),
+        );
+      },
+    );
+
+    test('should retrieve items from shared storage', () async {
+      final node = AsyncParallelBatchNode<int, int>(
+        (value) => Future.value(value + 1),
+      );
+      final shared = <String, dynamic>{
+        'items': [1, 2, 3],
+      };
+      final outputs = await node.run(shared);
+      expect(outputs, equals([2, 3, 4]));
+    });
+
     group('prepAsync', () {
       test('should throw an error if "items" is not provided', () async {
         final node = AsyncParallelBatchNode<int, int>((item) async => item);

@@ -218,6 +218,48 @@ void main() {
       );
       expect(lastAction, 'specific_action');
     });
+
+    test('should apply node-specific parameters to an existing node', () async {
+      final sharedStorage = <String, dynamic>{
+        '__node_params__': {
+          'add_node': {'addValue': 10},
+        },
+      };
+
+      final startNode = NumberNode(5);
+      final addNode = _AddFromParamsNode()..name = 'add_node';
+      // Set a default param to ensure it's overridden
+      addNode.params['addValue'] = 1;
+
+      final pipeline = Flow(start: startNode);
+      startNode >> addNode;
+
+      await pipeline.run(sharedStorage);
+
+      expect(sharedStorage['current'], 15); // 5 + 10, not 5 + 1
+    });
+
+    test(
+      'should ignore node-specific parameters for a non-existent node',
+      () async {
+        final sharedStorage = <String, dynamic>{
+          '__node_params__': {
+            'non_existent_node': {'addValue': 100}, // This should be ignored
+          },
+        };
+
+        final startNode = NumberNode(5);
+        final addNode = _AddFromParamsNode()..name = 'add_node';
+        addNode.params['addValue'] = 3; // This should be used
+
+        final pipeline = Flow(start: startNode);
+        startNode >> addNode;
+
+        await pipeline.run(sharedStorage);
+
+        expect(sharedStorage['current'], 8); // 5 + 3
+      },
+    );
   });
 }
 
@@ -236,4 +278,16 @@ class _ActionNode extends Node {
 
   @override
   BaseNode createInstance() => _ActionNode(_action);
+}
+
+class _AddFromParamsNode extends Node {
+  @override
+  Future<void> prep(Map<String, dynamic> sharedStorage) async {
+    final addValue = params['addValue'] as int? ?? 0;
+    sharedStorage['current'] =
+        (sharedStorage['current'] as int? ?? 0) + addValue;
+  }
+
+  @override
+  BaseNode createInstance() => _AddFromParamsNode();
 }
