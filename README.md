@@ -7,18 +7,18 @@
 
 A minimalist LLM framework, ported from Python to Dart.
 
-## Core vs Extensions
+## 🧩 Core vs Extensions
 
 This library provides two import options:
 
 - **`package:pocketflow/pocketflow.dart`** - Core classes that mirror the [Python PocketFlow](https://github.com/The-Pocket/PocketFlow) implementation
-- **`package:pocketflow/pocketflow_extensions.dart`** - Core classes plus Dart-specific convenience extensions
+- **`package:pocketflow/pocketflow_extensions.dart`** - Dart-specific convenience extensions
 
 For most use cases, start with the core library. See [EXTENSIONS.md](lib/EXTENSIONS.md) for details on the additional Dart-specific patterns available in the extensions library.
 
-## Installation 💻
+## 💻 Installation
 
-**❗ In order to start using Pocketflow you must have the [Dart SDK][dart_install_link] installed on your machine.**
+**❗ In order to start using `pocketflow` package you must have the [Dart SDK][dart_install_link] installed on your machine.**
 
 Install via `dart pub add`:
 
@@ -26,34 +26,41 @@ Install via `dart pub add`:
 dart pub add pocketflow
 ```
 
----
+## 🧑‍💼 Contributing
 
-## Continuous Integration 🤖
+Contributions are welcome! Please check out the unimplemented features or issues on the repository, and feel free to open a pull request.
+For more information, please see the [contribution guide](CONTRIBUTING.md).
 
-Pocketflow comes with a built-in [GitHub Actions workflow][github_actions_link] powered by [Very Good Workflows][very_good_workflows_link] but you can also add your preferred CI/CD solution.
+<a href="https://github.com/rag-wtf/PocketFlow-Dart/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=rag-wtf/PocketFlow-Dart" />
+</a>
 
-Out of the box, on each pull request and push, the CI `formats`, `lints`, and `tests` the code. This ensures the code remains consistent and behaves correctly as you add functionality or make changes. The project uses [Very Good Analysis][very_good_analysis_link] for a strict set of analysis options used by our team. Code coverage is enforced using the [Very Good Workflows][very_good_coverage_link].
+## 🙏 Acknowledgements
 
----
+This package was created using the following agentic coding tools:
 
-## Running Tests 🧪
+- [Spec-Kit](https://github.com/github/spec-kit)
+- [Gemini CLI](https://github.com/google-gemini/gemini-cli)
+- [Google Jules](https://jules.google)
+- [Augment Code](https://www.augmentcode.com/)
 
-To run all unit tests:
+## 📔 License
 
-```sh
-dart pub global activate coverage 1.15.0
-dart test --coverage=coverage
-dart pub global run coverage:format_coverage --lcov --in=coverage --out=coverage/lcov.info
+This project is licensed under the terms of the MIT license.
+
+## 🗒️ Citation
+
+If you utilize this package, please consider citing it with:
+
 ```
-
-To view the generated coverage report you can use [lcov](https://github.com/linux-test-project/lcov).
-
-```sh
-# Generate Coverage Report
-genhtml coverage/lcov.info -o coverage/
-
-# Open Coverage Report
-open coverage/index.html
+@misc{pocketflow,
+  author = {Lim Chee Kin},
+  title = {PocketFlow-Dart: A Dart Port of PocketFlow Python},
+  year = {2025},
+  publisher = {GitHub},
+  journal = {GitHub repository},
+  howpublished = {\url{https://github.com/rag-wtf/PocketFlow-Dart}},
+}
 ```
 
 [dart_install_link]: https://dart.dev/get-dart
@@ -70,3 +77,4 @@ open coverage/index.html
 [very_good_ventures_link_light]: https://verygood.ventures#gh-light-mode-only
 [very_good_ventures_link_dark]: https://verygood.ventures#gh-dark-mode-only
 [very_good_workflows_link]: https://github.com/VeryGoodOpenSource/very_good_workflows
+

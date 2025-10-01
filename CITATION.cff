@@ -1,0 +1,8 @@
+cff-version: 0.1.0
+message: "If you use this software, please cite it as below."
+authors:
+  - family-names: "Lim"
+    given-names: "Chee Kin"
+title: "pocketflow"
+date-released: 2025-10-01
+url: "https://github.com/rag-wtf/PocketFlow-Dart"

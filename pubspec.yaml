@@ -1,6 +1,6 @@
 name: pocketflow
 description: A minimalist LLM framework, ported from Python to Dart.
-version: 0.1.0+1
+version: 0.1.0
 
 
 environment:
