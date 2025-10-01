@@ -31,7 +31,8 @@ class NodeWithBatchMixin extends _BaseNodeForMixin
 }
 
 // A concrete implementation of InheritanceAsyncBatchNode for testing.
-class MyInheritanceAsyncBatchNode extends InheritanceAsyncBatchNode<int, String> {
+class MyInheritanceAsyncBatchNode
+    extends InheritanceAsyncBatchNode<int, String> {
   MyInheritanceAsyncBatchNode({super.maxRetries, super.wait});
 
   @override
@@ -79,14 +80,16 @@ void main() {
         );
       });
 
-      test('should throw ArgumentError if "items" has incorrect item types',
-          () {
-        node.params['items'] = ['a', 'b', 'c'];
-        expect(
-          () => node.prep({}),
-          throwsA(isA<ArgumentError>()),
-        );
-      });
+      test(
+        'should throw ArgumentError if "items" has incorrect item types',
+        () {
+          node.params['items'] = ['a', 'b', 'c'];
+          expect(
+            () => node.prep({}),
+            throwsA(isA<ArgumentError>()),
+          );
+        },
+      );
 
       test(
         'should throw ArgumentError if a dynamic list has incorrect item types',
@@ -151,9 +154,9 @@ void main() {
     });
 
     test('should handle empty list', () async {
-      node.params['items'] = [];
+      node.params['items'] = const <int>[];
       final result = await node.run(sharedStorage);
-      expect(result, equals([]));
+      expect(result, equals(const []));
     });
   });
 
@@ -201,9 +204,9 @@ void main() {
     });
 
     test('should handle empty list', () async {
-      node.params['items'] = [];
+      node.params['items'] = const <int>[];
       final result = await node.run(sharedStorage);
-      expect(result, equals([]));
+      expect(result, equals(const []));
     });
 
     test('should filter out null results', () async {
@@ -214,37 +217,57 @@ void main() {
 
     test('prepAsync should throw an error if "items" is not provided', () {
       expect(
-          () => node.run({}),
-          throwsA(isA<ArgumentError>().having((e) => e.message, 'message',
-              'The "items" parameter must be provided.')));
+        () => node.run({}),
+        throwsA(
+          isA<ArgumentError>().having(
+            (e) => e.message,
+            'message',
+            'The "items" parameter must be provided.',
+          ),
+        ),
+      );
     });
 
     test('prepAsync should throw an error if "items" is not a List', () {
       node.params['items'] = 'not a list';
       expect(
-          () => node.run({}),
-          throwsA(isA<ArgumentError>().having((e) => e.message, 'message',
-              'The "items" parameter must be a List, but got String.')));
+        () => node.run({}),
+        throwsA(
+          isA<ArgumentError>().having(
+            (e) => e.message,
+            'message',
+            'The "items" parameter must be a List, but got String.',
+          ),
+        ),
+      );
     });
 
     test(
-        'prepAsync should throw an error if "items" is a list of the wrong type',
-        () {
-      node.params['items'] = ['a', 'b'];
-      expect(
+      'prepAsync should throw an error if "items" is a list of the wrong type',
+      () {
+        node.params['items'] = ['a', 'b'];
+        expect(
           () => node.run({}),
-          throwsA(isA<ArgumentError>().having(
+          throwsA(
+            isA<ArgumentError>().having(
               (e) => e.message,
               'message',
-              'The "items" parameter must be a List where all elements are of type int.')));
-    });
+              '''
+The "items" parameter must be a List where all elements are of type int.''',
+            ),
+          ),
+        );
+      },
+    );
 
-    test('prepAsync should handle a List<dynamic> with correct item types',
-        () async {
-      node.params['items'] = <dynamic>[1, 2];
-      final result = await node.run({});
-      expect(result, equals(['item: 1', 'item: 2']));
-    });
+    test(
+      'prepAsync should handle a List<dynamic> with correct item types',
+      () async {
+        node.params['items'] = <dynamic>[1, 2];
+        final result = await node.run({});
+        expect(result, equals(['item: 1', 'item: 2']));
+      },
+    );
 
     test('should retrieve items from shared storage', () async {
       sharedStorage['items'] = [10, 20];

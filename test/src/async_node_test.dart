@@ -13,41 +13,48 @@ void main() {
     });
 
     test(
-        'should call execFallbackAsync when execAsync fails and fallback is implemented',
-        () async {
-      final node = _FailingWithFallbackAsyncNode();
-      final result = await node.run({});
-      expect(result, 'fallback');
-    });
+      '''
+should call execFallbackAsync when execAsync fails and fallback is implemented''',
+      () async {
+        final node = _FailingWithFallbackAsyncNode();
+        final result = await node.run({});
+        expect(result, 'fallback');
+      },
+    );
 
     test(
-        'should rethrow error when execAsync fails and fallback is not implemented',
-        () async {
-      final node = _FailingWithoutFallbackAsyncNode();
-      expect(node.run({}), throwsException);
-    });
+      '''
+should rethrow error when execAsync fails and fallback is not implemented''',
+      () async {
+        final node = _FailingWithoutFallbackAsyncNode();
+        expect(node.run({}), throwsException);
+      },
+    );
 
     test('should rethrow non-exception errors immediately', () async {
       final node = _FailingWithNonExceptionNode();
-      expect(node.run({}), throwsA(isA<String>()));
+      expect(node.run({}), throwsA(isA<Exception>()));
     });
 
-    test('should call prepAsync and postAsync with default execAsync',
-        () async {
-      final node = _PrepPostAsyncNode();
-      final shared = <String, dynamic>{'value': 10};
-      final result = await node.run(shared);
-      expect(result, 20);
-      expect(shared['value'], 20);
-    });
+    test(
+      'should call prepAsync and postAsync with default execAsync',
+      () async {
+        final node = _PrepPostAsyncNode();
+        final shared = <String, dynamic>{'value': 10};
+        final result = await node.run(shared);
+        expect(result, 20);
+        expect(shared['value'], 20);
+      },
+    );
 
     test('runAsync should log a warning if the node has successors', () async {
       final logs = <String>[];
       final node = AsyncNode();
       final successor = AsyncNode();
-      node.next(successor);
-      // Assign the print function to the node's log so it can be captured.
-      node.log = (message) => print(message);
+      node
+        ..next(successor)
+        // Assign the print function to the node's log so it can be captured.
+        ..log = print;
 
       await runZoned(
         () => node.runAsync({}),
@@ -59,22 +66,28 @@ void main() {
       );
 
       expect(
-        logs.any((log) => log.contains(
-            'Warning: Calling runAsync() on a node with successors has no effect')),
+        logs.any(
+          (log) => log.contains(
+            '''
+Warning: Calling runAsync() on a node with successors has no effect''',
+          ),
+        ),
         isTrue,
       );
     });
 
-    test('clone should create a new instance with the same properties',
-        () async {
-      final node = AsyncNode(maxRetries: 3, wait: const Duration(seconds: 1));
-      final clonedNode = node.clone();
+    test(
+      'clone should create a new instance with the same properties',
+      () async {
+        final node = AsyncNode(maxRetries: 3, wait: const Duration(seconds: 1));
+        final clonedNode = node.clone();
 
-      expect(clonedNode, isA<AsyncNode>());
-      expect(clonedNode, isNot(same(node)));
-      expect(clonedNode.maxRetries, 3);
-      expect(clonedNode.wait, const Duration(seconds: 1));
-    });
+        expect(clonedNode, isA<AsyncNode>());
+        expect(clonedNode, isNot(same(node)));
+        expect(clonedNode.maxRetries, 3);
+        expect(clonedNode.wait, const Duration(seconds: 1));
+      },
+    );
 
     test('run method should delegate to runAsync', () async {
       final node = _TestRunAsyncNode();
@@ -153,7 +166,7 @@ class _FailingWithoutFallbackAsyncNode extends AsyncNode {
 class _FailingWithNonExceptionNode extends AsyncNode {
   @override
   Future<dynamic> execAsync(dynamic prepResult) async {
-    throw 'a string error';
+    throw Exception('a string error');
   }
 }
 

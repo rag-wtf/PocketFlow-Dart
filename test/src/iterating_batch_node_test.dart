@@ -152,15 +152,17 @@ void main() {
   });
 
   group('Default IteratingBatchNode behavior', () {
-    test('should throw UnimplementedError if exec is not implemented',
-        () async {
-      final node = _UnimplementedIteratingBatchNode();
-      node.params['items'] = [1];
-      expect(
-        () => node.run({}),
-        throwsA(isA<UnimplementedError>()),
-      );
-    });
+    test(
+      'should throw UnimplementedError if exec is not implemented',
+      () async {
+        final node = _UnimplementedIteratingBatchNode();
+        node.params['items'] = [1];
+        expect(
+          () => node.run({}),
+          throwsA(isA<UnimplementedError>()),
+        );
+      },
+    );
   });
 }
 

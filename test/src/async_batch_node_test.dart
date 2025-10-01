@@ -16,27 +16,40 @@ class MyAsyncBatchNode extends AsyncBatchNode<int, int> {
 
 void main() {
   group('AsyncBatchNode', () {
-    test('should process a batch of items with the provided function', () async {
-      final node = AsyncBatchNode<int, int>((item) async => item * 2)
-        ..params['items'] = [1, 2, 3];
-      final result = await node.run({});
-      expect(result, equals([2, 4, 6]));
-    });
+    test(
+      'should process a batch of items with the provided function',
+      () async {
+        final node = AsyncBatchNode<int, int>((item) async => item * 2)
+          ..params['items'] = [1, 2, 3];
+        final result = await node.run({});
+        expect(result, equals([2, 4, 6]));
+      },
+    );
 
-    test('should retrieve items from shared storage if not in params',
-        () async {
-      final node = AsyncBatchNode<int, int>((item) async => item * 2);
-      final shared = {'items': [4, 5, 6]};
-      final result = await node.run(shared);
-      expect(result, equals([8, 10, 12]));
-    });
+    test(
+      'should retrieve items from shared storage if not in params',
+      () async {
+        final node = AsyncBatchNode<int, int>((item) async => item * 2);
+        final shared = {
+          'items': [4, 5, 6],
+        };
+        final result = await node.run(shared);
+        expect(result, equals([8, 10, 12]));
+      },
+    );
 
     test('should throw an error if items are not provided', () {
       final node = AsyncBatchNode<int, int>((item) async => item * 2);
       expect(
-          () => node.run({}),
-          throwsA(isA<ArgumentError>().having((e) => e.message, 'message',
-              'The "items" parameter must be provided.')));
+        () => node.run({}),
+        throwsA(
+          isA<ArgumentError>().having(
+            (e) => e.message,
+            'message',
+            'The "items" parameter must be provided.',
+          ),
+        ),
+      );
     });
 
     test('should allow overriding postAsync', () async {
@@ -56,21 +69,30 @@ void main() {
       test('should throw an error if "items" is not a List', () {
         node.params['items'] = 'not a list';
         expect(
-            () => node.prepAsync({}),
-            throwsA(isA<ArgumentError>().having((e) => e.message, 'message',
-                'The "items" parameter must be a List, but got String.')));
+          () => node.prepAsync({}),
+          throwsA(
+            isA<ArgumentError>().having(
+              (e) => e.message,
+              'message',
+              'The "items" parameter must be a List, but got String.',
+            ),
+          ),
+        );
       });
 
-      test(
-          'should throw an error if "items" is a list of the wrong type',
-          () {
+      test('should throw an error if "items" is a list of the wrong type', () {
         node.params['items'] = <String>['a', 'b'];
         expect(
-            () => node.prepAsync({}),
-            throwsA(isA<ArgumentError>().having(
-                (e) => e.message,
-                'message',
-                'The "items" parameter must be a List where all elements are of type int.')));
+          () => node.prepAsync({}),
+          throwsA(
+            isA<ArgumentError>().having(
+              (e) => e.message,
+              'message',
+              '''
+The "items" parameter must be a List where all elements are of type int.''',
+            ),
+          ),
+        );
       });
 
       test('should handle a List<dynamic> with correct item types', () async {
@@ -107,14 +129,16 @@ void main() {
       expect(result, [20]);
     });
 
-    test('should throw UnimplementedError if execAsyncItem is not implemented',
-        () {
-      final node = AsyncBatchNode<int, int>();
-      node.params['items'] = [1, 2, 3];
-      expect(
-        () => node.run(<String, dynamic>{}),
-        throwsA(isA<UnimplementedError>()),
-      );
-    });
+    test(
+      'should throw UnimplementedError if execAsyncItem is not implemented',
+      () {
+        final node = AsyncBatchNode<int, int>();
+        node.params['items'] = [1, 2, 3];
+        expect(
+          () => node.run(<String, dynamic>{}),
+          throwsA(isA<UnimplementedError>()),
+        );
+      },
+    );
   });
 }

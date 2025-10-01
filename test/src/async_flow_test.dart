@@ -91,8 +91,9 @@ void main() {
 
   group('AsyncFlow default implementations', () {
     test('postAsync should return execResult by default', () async {
-      final flow =
-          _ConcreteAsyncFlow(start: SimpleAsyncNode((_) async => 'exec_result'));
+      final flow = _ConcreteAsyncFlow(
+        start: SimpleAsyncNode((_) async => 'exec_result'),
+      );
       final result = await flow.runAsync({});
       expect(result, 'exec_result');
     });
