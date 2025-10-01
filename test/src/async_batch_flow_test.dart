@@ -89,6 +89,43 @@ void main() {
       expect(clonedFlow, isNot(same(flow)));
     });
   });
+
+  test('should handle null from prepAsync', () async {
+    final flow = _NullPrepAsyncBatchFlow(start: _MyNode());
+    final shared = <String, dynamic>{};
+    await flow.runAsync(shared);
+    expect(shared['post_called'], isTrue);
+  });
+}
+
+class _MyNode extends AsyncNode {
+  @override
+  Future<void> execAsync(dynamic prepResult) async {}
+}
+
+class _NullPrepAsyncBatchFlow extends AsyncBatchFlow {
+  _NullPrepAsyncBatchFlow({super.start});
+
+  @override
+  Future<List<Map<String, dynamic>>?> prepAsync(
+    Map<String, dynamic> shared,
+  ) async {
+    return null;
+  }
+
+  @override
+  Future<void> postAsync(
+    Map<String, dynamic> shared,
+    dynamic prepResult,
+    dynamic execResult,
+  ) async {
+    shared['post_called'] = true;
+  }
+
+  @override
+  _NullPrepAsyncBatchFlow clone() {
+    return super.copy(_NullPrepAsyncBatchFlow.new);
+  }
 }
 
 // Helper class for testing

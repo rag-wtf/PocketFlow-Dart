@@ -150,4 +150,23 @@ void main() {
       },
     );
   });
+
+  group('Default IteratingBatchNode behavior', () {
+    test('should throw UnimplementedError if exec is not implemented',
+        () async {
+      final node = _UnimplementedIteratingBatchNode();
+      node.params['items'] = [1];
+      expect(
+        () => node.run({}),
+        throwsA(isA<UnimplementedError>()),
+      );
+    });
+  });
+}
+
+class _UnimplementedIteratingBatchNode extends IteratingBatchNode<int, int> {
+  @override
+  _UnimplementedIteratingBatchNode clone() {
+    return _UnimplementedIteratingBatchNode();
+  }
 }
