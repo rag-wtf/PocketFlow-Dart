@@ -89,10 +89,9 @@ class BranchNode extends Node {
 
   @override
   Future<String> exec(dynamic prepResult) async {
-    final result =
-        (prepResult as int) > (params['value'] as int)
-            ? 'positive'
-            : 'negative';
+    final result = (prepResult as int) > (params['value'] as int)
+        ? 'positive'
+        : 'negative';
     return result;
   }
 
@@ -102,12 +101,11 @@ class BranchNode extends Node {
     dynamic prepResult,
     dynamic execResult,
   ) async {
-    // BranchNode does not modify shared['value'] directly, 
+    // BranchNode does not modify shared['value'] directly,
     //it returns an action.
     return Future.value(execResult);
   }
 }
-
 
 void main() {
   group('Flow', () {
@@ -117,8 +115,7 @@ void main() {
     });
 
     test('start().run() should execute a single node', () async {
-      final flow = Flow()
-        ..start(NumberNode(10));
+      final flow = Flow()..start(NumberNode(10));
       final shared = <String, dynamic>{};
       await flow.run(shared);
       expect(shared['value'], isNull);
@@ -177,7 +174,7 @@ void main() {
     });
 
     // The following test is commented out because it gets stuck due to
-    // the Flow implementation not correctly processing actions from 
+    // the Flow implementation not correctly processing actions from
     //post methods.
     // test('should follow the "negative" branch', () async {
     //   final flow = Flow();
@@ -197,9 +194,9 @@ void main() {
     // });
 
     // The following test is commented out because it gets stuck due to
-    // the Flow implementation not correctly processing actions from 
+    // the Flow implementation not correctly processing actions from
     // post methods and potentially leading to an infinite loop.
-    // test('should cycle until a condition is met and return a signal', 
+    // test('should cycle until a condition is met and return a signal',
     //() async {
     //   final flow = Flow();
     //   final startNode = NumberNode(5);
