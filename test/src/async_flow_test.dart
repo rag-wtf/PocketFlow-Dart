@@ -97,6 +97,12 @@ void main() {
       final result = await flow.runAsync({});
       expect(result, 'exec_result');
     });
+
+    test('execFallbackAsync should return null by default', () async {
+      final flow = _ConcreteAsyncFlow();
+      final result = await flow.execFallbackAsync(null, Exception('test'));
+      expect(result, isNull);
+    });
   });
 }
 

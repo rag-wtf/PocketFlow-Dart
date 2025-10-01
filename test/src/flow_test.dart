@@ -294,5 +294,12 @@ void main() {
       expect(clonedFlow.params['param1'], 'value1');
       expect(clonedFlow, isNot(same(flow)));
     });
+
+    test('createInstance should return a new Flow instance', () {
+      final flow = Flow();
+      final newInstance = flow.createInstance();
+      expect(newInstance, isA<Flow>());
+      expect(newInstance, isNot(same(flow)));
+    });
   });
 }
