@@ -20,9 +20,7 @@ class NumberNode extends Node {
     dynamic prepResult,
     dynamic execResult,
   ) async {
-    print('NumberNode post: execResult=$execResult, shared before=$shared');
     shared['value'] = execResult;
-    print('NumberNode post: shared after=$shared');
     return Future.value(execResult);
   }
 }
@@ -91,12 +89,10 @@ class BranchNode extends Node {
 
   @override
   Future<String> exec(dynamic prepResult) async {
-    final result = (prepResult as int) > (params['value'] as int)
-        ? 'positive'
-        : 'negative';
-    print(
-      'BranchNode exec: prepResult=$prepResult, params[value]=${params['value']}, result=$result',
-    );
+    final result =
+        (prepResult as int) > (params['value'] as int)
+            ? 'positive'
+            : 'negative';
     return result;
   }
 
@@ -106,38 +102,12 @@ class BranchNode extends Node {
     dynamic prepResult,
     dynamic execResult,
   ) async {
-    print('BranchNode post: execResult=$execResult, shared before=$shared');
-    // BranchNode does not modify shared['value'] directly, it returns an action.
+    // BranchNode does not modify shared['value'] directly, 
+    //it returns an action.
     return Future.value(execResult);
   }
 }
 
-class CycleNode extends Node {
-  @override
-  Future<int> prep(Map<String, dynamic> shared) async {
-    return shared['value'] as int;
-  }
-
-  @override
-  Future<int> exec(dynamic prepResult) async {
-    return (prepResult as int) - 1;
-  }
-
-  @override
-  Future<dynamic> post(
-    Map<String, dynamic> shared,
-    dynamic prepResult,
-    dynamic execResult,
-  ) async {
-    print('CycleNode post: execResult=$execResult, shared before=$shared');
-    shared['value'] = execResult;
-    print('CycleNode post: shared after=$shared');
-    if ((execResult as int) <= 0) {
-      return 'end';
-    }
-    return 'default';
-  }
-}
 
 void main() {
   group('Flow', () {
@@ -147,8 +117,8 @@ void main() {
     });
 
     test('start().run() should execute a single node', () async {
-      final flow = Flow();
-      flow.start(NumberNode(10));
+      final flow = Flow()
+        ..start(NumberNode(10));
       final shared = <String, dynamic>{};
       await flow.run(shared);
       expect(shared['value'], isNull);
@@ -156,7 +126,12 @@ void main() {
 
     test('start().next().next() should execute a chain of nodes', () async {
       final flow = Flow();
-      flow.start(NumberNode(10)).next(AddNode(5)).next(MultiplyNode(2));
+      flow
+          .start(NumberNode(10))
+          .next(AddNode(5))
+          .next(
+            MultiplyNode(2),
+          );
       final shared = <String, dynamic>{};
       await flow.run(shared);
       expect(shared['value'], isNull);
@@ -186,8 +161,15 @@ void main() {
 
       flow.start(startNode);
       startNode.next(branchNode);
-      branchNode.next(positiveNode, action: 'positive');
-      branchNode.next(negativeNode, action: 'negative');
+      branchNode
+          .next(
+            positiveNode,
+            action: 'positive',
+          )
+          .next(
+            negativeNode,
+            action: 'negative',
+          );
 
       final shared = <String, dynamic>{};
       await flow.run(shared);
@@ -195,7 +177,8 @@ void main() {
     });
 
     // The following test is commented out because it gets stuck due to
-    // the Flow implementation not correctly processing actions from post methods.
+    // the Flow implementation not correctly processing actions from 
+    //post methods.
     // test('should follow the "negative" branch', () async {
     //   final flow = Flow();
     //   final startNode = NumberNode(5);
@@ -214,9 +197,10 @@ void main() {
     // });
 
     // The following test is commented out because it gets stuck due to
-    // the Flow implementation not correctly processing actions from post methods
-    // and potentially leading to an infinite loop.
-    // test('should cycle until a condition is met and return a signal', () async {
+    // the Flow implementation not correctly processing actions from 
+    // post methods and potentially leading to an infinite loop.
+    // test('should cycle until a condition is met and return a signal', 
+    //() async {
     //   final flow = Flow();
     //   final startNode = NumberNode(5);
     //   final cycleNode = CycleNode();
@@ -281,8 +265,14 @@ void main() {
       await flow.run(originalShared);
       final clonedShared = <String, dynamic>{};
       await clonedFlow.run(clonedShared);
-      expect(originalShared['value'], isNull);
-      expect(clonedShared['value'], isNull);
+      expect(
+        originalShared['value'],
+        isNull,
+      );
+      expect(
+        clonedShared['value'],
+        isNull,
+      );
 
       // Modify the original flow and check if the clone is affected
       addNode.params['value'] = 10;
@@ -290,8 +280,14 @@ void main() {
       await flow.run(newOriginalShared);
       final newClonedShared = <String, dynamic>{};
       await clonedFlow.run(newClonedShared);
-      expect(newOriginalShared['value'], isNull);
-      expect(newClonedShared['value'], isNull);
+      expect(
+        newOriginalShared['value'],
+        isNull,
+      );
+      expect(
+        newClonedShared['value'],
+        isNull,
+      );
     });
 
     test('clone should create a copy of a flow with params', () {
