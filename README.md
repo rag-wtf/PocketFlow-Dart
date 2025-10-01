@@ -1,7 +1,8 @@
-# Pocketflow
+# PocketFlow-Dart
 
 [![style: very good analysis][very_good_analysis_badge]][very_good_analysis_link]
 [![Powered by Mason](https://img.shields.io/endpoint?url=https%3A%2F%2Ftinyurl.com%2Fmason-badge)](https://github.com/felangel/mason)
+![Coverage](coverage_badge.svg)
 [![License: MIT][license_badge]][license_link]
 
 A minimalist LLM framework, ported from Python to Dart.
@@ -10,7 +11,7 @@ A minimalist LLM framework, ported from Python to Dart.
 
 This library provides two import options:
 
-- **`package:pocketflow/pocketflow.dart`** - Core classes that mirror the Python PocketFlow implementation
+- **`package:pocketflow/pocketflow.dart`** - Core classes that mirror the [Python PocketFlow](https://github.com/The-Pocket/PocketFlow) implementation
 - **`package:pocketflow/pocketflow_extensions.dart`** - Core classes plus Dart-specific convenience extensions
 
 For most use cases, start with the core library. See [EXTENSIONS.md](lib/EXTENSIONS.md) for details on the additional Dart-specific patterns available in the extensions library.
